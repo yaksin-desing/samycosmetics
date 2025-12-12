@@ -25,44 +25,15 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
 
-// // ========= LUZ DIRECCIONAL =========
-// const dirLight = new THREE.DirectionalLight(0xffffff, 7);
-// dirLight.position.set(5, 4, 0); // altura y dirección de luz
-// dirLight.castShadow = false;
-
-// // Config sombra suave
-// dirLight.shadow.mapSize.width = 2048;
-// dirLight.shadow.mapSize.height = 2048;
-// dirLight.shadow.camera.near = 0.5;
-// dirLight.shadow.camera.far = 50;
-
-// // Ampliar área de sombras para que no se corten
-// dirLight.shadow.camera.left = -20;
-// dirLight.shadow.camera.right = 20;
-// dirLight.shadow.camera.top = 20;
-// dirLight.shadow.camera.bottom = -20;
-
-// scene.add(dirLight);
-
-// // Opcional: helper para ver desde dónde ilumina
-// const dirHelper = new THREE.DirectionalLightHelper(dirLight, 3);
-// scene.add(dirHelper);
-
-// // ========= LUZ DIRECCIONAL =========
-// const dirLight2 = new THREE.DirectionalLight(0xffffff, 7);
-// dirLight2.position.set(-5, 4, 0); // altura y dirección de luz
-// scene.add(dirLight2);
-
-
 
 // ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
-  70,
+  59,
   window.innerWidth / window.innerHeight,
   0.1,
-  500
+  700
 );
-camera.position.set(0, 0, 3);
+camera.position.set(0, 0.5, 2.5);
 
 
 // ========= RENDERER =========
@@ -107,25 +78,19 @@ controls.update();
 
 
 
-
 // ========= CARGA MODELO =========
 const gltfLoader = new GLTFLoader();
 let mixer = null;
 let cameraGLB = null;
 const clock = new THREE.Clock();
+let animationsFinished = false;
 
 gltfLoader.load("./samy.glb", (gltf) => {
   const root = gltf.scene;
   scene.add(root);
+  root.position.set(-0.3, 0.5, 0);
 
-  colorConfigs.forEach(cfg => {
-    const obj = root.getObjectByName(cfg.name);
-    if (obj) {
-      cfg.mesh = obj;
-      cfg.originalColor = obj.material.color.clone();
-    }
-  });
-
+  // -------- DETECTAR CÁMARA DEL GLB --------
   root.traverse((obj) => {
     if (obj.isCamera) {
       cameraGLB = obj;
@@ -144,57 +109,50 @@ gltfLoader.load("./samy.glb", (gltf) => {
     }
   });
 
+  // -------- ANIMACIONES --------
   if (gltf.animations.length > 0) {
     mixer = new THREE.AnimationMixer(root);
 
     let cameraAction = null;
-    let modelActions = [];
-    let cameraClip = null;
-    let modelClips = [];
+    const modelActions = [];
 
     gltf.animations.forEach((clip) => {
-      const isCameraAnim = clip.tracks.some(t =>
-        t.name.toLowerCase().includes("camera")
-      );
+      const isCameraAnim = clip.tracks.some(t => t.name.toLowerCase().includes("camera"));
 
-      if (isCameraAnim) cameraClip = clip;
-      else modelClips.push(clip);
-    });
-
-    if (cameraClip) {
-      cameraAction = mixer.clipAction(cameraClip);
-      cameraAction.setLoop(THREE.LoopRepeat);
-      cameraAction.clampWhenFinished = false;
-      cameraAction.play();
-    }
-
-    modelClips.forEach((clip) => {
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce);
-      action.clampWhenFinished = false;
-      action.play();
-      modelActions.push(action);
-    });
+      action.clampWhenFinished = true;
 
-    mixer.addEventListener("loop", (e) => {
-      if (e.action === cameraAction) {
-        modelActions.forEach(a => {
-          a.reset();
-          a.play();
-        });
+      if (isCameraAnim) {
+        cameraAction = action;
+      } else {
+        modelActions.push(action);
       }
     });
+
+    // Ejecutar todas las animaciones
+    if (cameraAction) cameraAction.play();
+    modelActions.forEach(a => a.play());
+
+    // Detectar final de TODAS las animaciones
+    let pending = modelActions.length + (cameraAction ? 1 : 0);
+
+    const markFinished = () => {
+      pending--;
+      if (pending <= 0) animationsFinished = true;
+    };
+
+    if (cameraAction)
+      cameraAction.addEventListener("finished", markFinished);
+
+    modelActions.forEach(a =>
+      a.addEventListener("finished", markFinished)
+    );
   }
 
-  // =====================================================
-  // ESCENA LISTA → ACTIVAR ANIMACIONES
-  // =====================================================
-  setTimeout(() => {
-    ready = true;
-    clock.start();
-  }, 0);
-
+  clock.start();
 });
+
 
 
 // ========= STATS =========
@@ -203,37 +161,17 @@ stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
 
-// =====================================================
-// === PARPADEO AZUL SOBRE COLOR ORIGINAL ==============
-// =====================================================
-function smoothBlink(cfg, frame, fps) {
-  const durationFrames = cfg.frameEnd - cfg.frameStart;
-  const totalBlinks = 3;
-  const blinkDuration = durationFrames / totalBlinks;
-
-  const localFrame = frame - cfg.frameStart;
-  let blinkIndex = Math.floor(localFrame / blinkDuration);
-
-  if (blinkIndex >= totalBlinks) {
-    cfg.mesh.material.color.copy(cfg.originalColor);
-    return;
-  }
-
-  let phase = (localFrame % blinkDuration) / blinkDuration;
-  let intensity = Math.sin(phase * Math.PI);
-
-  cfg.mesh.material.color.copy(cfg.originalColor).lerp(cfg.colorAlt, intensity);
-}
 
 
-// ========= LOOP =========
 function animate() {
   stats.begin();
   requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
 
-
+  if (mixer && !animationsFinished) {
+    mixer.update(delta);
+  }
 
   if (!cameraGLB) controls.update();
 
@@ -244,6 +182,7 @@ function animate() {
 }
 
 animate();
+
 
 
 // ========= RESIZE =========

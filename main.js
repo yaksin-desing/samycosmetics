@@ -1,30 +1,20 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
 import Stats from "three/addons/libs/stats.module.js";
 import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
-import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
-RectAreaLightUniformsLib.init();
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { Reflector } from "three/addons/objects/Reflector.js";
-
-
-
+RectAreaLightUniformsLib.init();
 
 // ========= CONTENEDOR =========
 const container = document.getElementById("canvas-container");
 if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
 
-
 // ========= ESCENA =========
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
-
-
 
 // ========= CÁMARA =========
 const camera = new THREE.PerspectiveCamera(
@@ -35,36 +25,29 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 0.5, 2.5);
 
-
 // ========= RENDERER =========
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha: true,
-
 });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 3));
 renderer.setSize(window.innerWidth, window.innerHeight);
-
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
 container.appendChild(renderer.domElement);
 
-// =====================================================
-// === POST-PROCESSING =================================
-// =====================================================
+// ========= POST-PROCESSING =========
 const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.1,
+  0.25,
   0.1,
   0.0
 );
 composer.addPass(bloomPass);
-
 
 // ========= ORBIT CONTROLS =========
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -72,11 +55,6 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.03;
 controls.target.set(0, 1, 0);
 controls.update();
-
-
-
-
-
 
 // ========= CARGA MODELO =========
 const gltfLoader = new GLTFLoader();
@@ -99,7 +77,7 @@ gltfLoader.load("./samy.glb", (gltf) => {
       cameraGLB.fov = 75;
       cameraGLB.aspect = window.innerWidth / window.innerHeight;
       cameraGLB.near = 0.1;
-      cameraGLB.far = 500;
+      cameraGLB.far = 700;
       cameraGLB.updateProjectionMatrix();
     }
 
@@ -117,14 +95,25 @@ gltfLoader.load("./samy.glb", (gltf) => {
     const modelActions = [];
 
     gltf.animations.forEach((clip) => {
-      const isCameraAnim = clip.tracks.some(t => t.name.toLowerCase().includes("camera"));
-
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce);
       action.clampWhenFinished = true;
 
-      if (isCameraAnim) {
+      // Detectar si este clip afecta a la cámara
+      let affectsCamera = false;
+
+      clip.tracks.forEach((track) => {
+        const nodeName = track.name.split(".")[0];
+        const node = root.getObjectByName(nodeName);
+
+        if (node && node.isCamera) {
+          affectsCamera = true;
+        }
+      });
+
+      if (affectsCamera) {
         cameraAction = action;
+        console.log("Animación detectada para cámara:", clip.name);
       } else {
         modelActions.push(action);
       }
@@ -132,9 +121,9 @@ gltfLoader.load("./samy.glb", (gltf) => {
 
     // Ejecutar todas las animaciones
     if (cameraAction) cameraAction.play();
-    modelActions.forEach(a => a.play());
+    modelActions.forEach((a) => a.play());
 
-    // Detectar final de TODAS las animaciones
+    // Detectar fin total
     let pending = modelActions.length + (cameraAction ? 1 : 0);
 
     const markFinished = () => {
@@ -144,8 +133,7 @@ gltfLoader.load("./samy.glb", (gltf) => {
 
     if (cameraAction)
       cameraAction.addEventListener("finished", markFinished);
-
-    modelActions.forEach(a =>
+    modelActions.forEach((a) =>
       a.addEventListener("finished", markFinished)
     );
   }
@@ -153,16 +141,12 @@ gltfLoader.load("./samy.glb", (gltf) => {
   clock.start();
 });
 
-
-
 // ========= STATS =========
 const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
-
-
-
+// ========= LOOP PRINCIPAL =========
 function animate() {
   stats.begin();
   requestAnimationFrame(animate);
@@ -183,8 +167,6 @@ function animate() {
 
 animate();
 
-
-
 // ========= RESIZE =========
 window.addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
@@ -198,5 +180,4 @@ window.addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
   composer.setSize(innerWidth, innerHeight);
   bloomPass.setSize(innerWidth, innerHeight);
-
 });

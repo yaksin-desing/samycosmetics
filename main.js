@@ -65,7 +65,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   700
 );
-camera.position.set(0, 0.6, 3);
+camera.position.set(0, 0, 3);
 
 // ======================================================
 // RENDERER
@@ -118,12 +118,13 @@ loader.load(
   (gltf) => {
     const model = gltf.scene;
     scene.add(model);
+    model.position.set(-0.2, -0.2, 0);
 
     gltf.scene.traverse((obj) => {
       if (obj.isCamera) {
         cameraGLB = obj;
         controls.enabled = false;
-        cameraGLB.fov = 59;
+        cameraGLB.fov = 70;
         cameraGLB.aspect = window.innerWidth / window.innerHeight;
         cameraGLB.near = 0.1;
         cameraGLB.far = 700;
@@ -207,7 +208,7 @@ window.addEventListener("mousemove", (event) => {
 window.addEventListener("deviceorientation", (event) => {
   // event.gamma es rotación en el eje Y del dispositivo (-90 a 90)
   // invertimos para que coincida visualmente
-  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 30, -1, 1); 
+  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 50, -1, 1); 
 });
 
 // ======================

@@ -2,182 +2,232 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import Stats from "three/addons/libs/stats.module.js";
-import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-RectAreaLightUniformsLib.init();
 
-// ========= CONTENEDOR =========
+// ======================================================
+// ESTADOS DE CARGA / CONTROL
+// ======================================================
+let glbReady = false;
+let loaderHidden = false;
+let firstFrameRenderedAfterReady = false;
+let animationStarted = false;
+
+const clock = new THREE.Clock(false);
+let mixer = null;
+let cameraGLB = null;
+let animationsEnded = false;
+
+// ======================================================
+// OCULTAR LOADER
+// ======================================================
+function hideLoader() {
+  const loader = document.getElementById("loading-screen");
+  if (!loader) return;
+
+  loader.style.opacity = "0";
+  setTimeout(() => {
+    loader.style.display = "none";
+    loaderHidden = true;
+    console.log("🟢 Loader oculto completamente");
+  }, 600);
+}
+
+// ======================================================
+// INICIO CONTROLADO DE LA ANIMACIÓN
+// ======================================================
+function startIfReady() {
+  if (animationStarted) return;
+  if (glbReady && loaderHidden && firstFrameRenderedAfterReady) {
+    animationStarted = true;
+    console.log("🔥 Todo listo → iniciando animación");
+    if (mixer) {
+      mixer.timeScale = 1;
+      clock.start();
+    }
+  }
+}
+
+// ======================================================
+// ESCENA
+// ======================================================
 const container = document.getElementById("canvas-container");
-if (!container) throw new Error("Falta <div id='canvas-container'> en tu HTML");
-
-// ========= ESCENA =========
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
-// ========= CÁMARA =========
+// ======================================================
+// CÁMARA
+// ======================================================
 const camera = new THREE.PerspectiveCamera(
   59,
   window.innerWidth / window.innerHeight,
   0.1,
   700
 );
-camera.position.set(0, 0.5, 2.5);
+camera.position.set(0, 0.6, 3);
 
-// ========= RENDERER =========
+// ======================================================
+// RENDERER
+// ======================================================
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha: true,
+  premultipliedAlpha: true,
+  powerPreference: "high-performance",
 });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 3));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.sortObjects = true; // importante para transparencias
+renderer.physicallyCorrectLights = false;
 container.appendChild(renderer.domElement);
 
-// ========= POST-PROCESSING =========
+// ======================================================
+// POST FX (Bloom solo para objetos brillantes, no vidrio)
+// ======================================================
 const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
+// Bloom muy suave para objetos brillantes
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.25,
-  0.1,
-  0.0
+  0.3, // fuerza baja
+  0.1,  // radio
+  0.85  // threshold alto (solo lo muy brillante)
 );
-composer.addPass(bloomPass);
+composer.addPass(bloomPass); // comentar si quieres desactivarlo completamente
 
-// ========= ORBIT CONTROLS =========
+// ======================================================
+// CONTROLES
+// ======================================================
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.dampingFactor = 0.03;
-controls.target.set(0, 1, 0);
-controls.update();
 
-// ========= CARGA MODELO =========
-const gltfLoader = new GLTFLoader();
-let mixer = null;
-let cameraGLB = null;
-const clock = new THREE.Clock();
-let animationsFinished = false;
+// ======================================================
+// CARGA GLB
+// ======================================================
+const loader = new GLTFLoader();
 
-gltfLoader.load("./samy.glb", (gltf) => {
-  const root = gltf.scene;
-  scene.add(root);
-  root.position.set(-0.3, 0.5, 0);
+loader.load(
+  "samy.glb",
+  (gltf) => {
+    const model = gltf.scene;
+    scene.add(model);
 
-  // -------- DETECTAR CÁMARA DEL GLB --------
-  root.traverse((obj) => {
-    if (obj.isCamera) {
-      cameraGLB = obj;
-      controls.enabled = false;
+    gltf.scene.traverse((obj) => {
+      if (obj.isCamera) {
+        cameraGLB = obj;
+        controls.enabled = false;
+        cameraGLB.fov = 59;
+        cameraGLB.aspect = window.innerWidth / window.innerHeight;
+        cameraGLB.near = 0.1;
+        cameraGLB.far = 700;
+        cameraGLB.updateProjectionMatrix();
+        console.log("📷 Cámara GLB enlazada");
+        return;
+      }
 
-      cameraGLB.fov = 75;
-      cameraGLB.aspect = window.innerWidth / window.innerHeight;
-      cameraGLB.near = 0.1;
-      cameraGLB.far = 700;
-      cameraGLB.updateProjectionMatrix();
-    }
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
 
-    if (obj.isMesh && obj.material) {
-      obj.castShadow = true;
-      obj.receiveShadow = true;
-    }
-  });
+        const mat = obj.material;
+        if (!mat) return;
 
-  // -------- ANIMACIONES --------
-  if (gltf.animations.length > 0) {
-    mixer = new THREE.AnimationMixer(root);
+        const isGlassLike =
+          mat.transparent === true ||
+          ("transmission" in mat && mat.transmission > 0) ||
+          ("opacity" in mat && mat.opacity < 1);
 
-    let cameraAction = null;
-    const modelActions = [];
+        if (isGlassLike) {
+          // ajustes clave para evitar ghosting / halos
+          mat.depthWrite = false;
+          obj.renderOrder = 999;
+          mat.side = THREE.DoubleSide;
+          mat.premultipliedAlpha = true;
+          mat.blending = THREE.NormalBlending;
+          mat.needsUpdate = true;
+        } else {
+          // objetos opacos pueden recibir bloom
+          obj.layers.enable(1); // usar layer 1 para bloom
+        }
+      }
+    });
+
+    // Animaciones Blender
+    mixer = new THREE.AnimationMixer(model);
+    mixer.timeScale = 0;
 
     gltf.animations.forEach((clip) => {
       const action = mixer.clipAction(clip);
       action.setLoop(THREE.LoopOnce);
       action.clampWhenFinished = true;
-
-      // Detectar si este clip afecta a la cámara
-      let affectsCamera = false;
-
-      clip.tracks.forEach((track) => {
-        const nodeName = track.name.split(".")[0];
-        const node = root.getObjectByName(nodeName);
-
-        if (node && node.isCamera) {
-          affectsCamera = true;
-        }
-      });
-
-      if (affectsCamera) {
-        cameraAction = action;
-        console.log("Animación detectada para cámara:", clip.name);
-      } else {
-        modelActions.push(action);
-      }
+      action.play();
     });
 
-    // Ejecutar todas las animaciones
-    if (cameraAction) cameraAction.play();
-    modelActions.forEach((a) => a.play());
+    mixer.addEventListener("finished", () => {
+      animationsEnded = true;
+      console.log("🎬 Animación terminada");
+    });
 
-    // Detectar fin total
-    let pending = modelActions.length + (cameraAction ? 1 : 0);
+    glbReady = true;
+    console.log("🟢 GLB cargado");
+    hideLoader();
+  },
+  undefined,
+  (err) => console.error("Error GLB:", err)
+);
 
-    const markFinished = () => {
-      pending--;
-      if (pending <= 0) animationsFinished = true;
-    };
-
-    if (cameraAction)
-      cameraAction.addEventListener("finished", markFinished);
-    modelActions.forEach((a) =>
-      a.addEventListener("finished", markFinished)
-    );
-  }
-
-  clock.start();
-});
-
-// ========= STATS =========
+// ======================================================
+// STATS
+// ======================================================
 const stats = new Stats();
-stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
-// ========= LOOP PRINCIPAL =========
+// ======================================================
+// ANIMATE LOOP
+// ======================================================
 function animate() {
-  stats.begin();
   requestAnimationFrame(animate);
+  stats.begin();
 
   const delta = clock.getDelta();
-
-  if (mixer && !animationsFinished) {
+  if (mixer && !animationsEnded && clock.running) {
     mixer.update(delta);
   }
 
-  if (!cameraGLB) controls.update();
+  if (cameraGLB) {
+    composer.passes[0].camera = cameraGLB;
+  }
 
-  renderPass.camera = cameraGLB || camera;
   composer.render();
+
+  if (glbReady && loaderHidden && !firstFrameRenderedAfterReady) {
+    firstFrameRenderedAfterReady = true;
+    startIfReady();
+  }
 
   stats.end();
 }
 
 animate();
 
-// ========= RESIZE =========
+// ======================================================
+// RESIZE
+// ======================================================
 window.addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-
   if (cameraGLB) {
-    cameraGLB.aspect = innerWidth / innerHeight;
+    cameraGLB.aspect = window.innerWidth / window.innerHeight;
     cameraGLB.updateProjectionMatrix();
   }
-
-  renderer.setSize(innerWidth, innerHeight);
-  composer.setSize(innerWidth, innerHeight);
-  bloomPass.setSize(innerWidth, innerHeight);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
 });

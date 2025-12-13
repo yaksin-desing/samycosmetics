@@ -83,7 +83,7 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.85;
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.sortObjects = true; // importante para transparencias
+renderer.sortObjects = true;
 renderer.physicallyCorrectLights = false;
 container.appendChild(renderer.domElement);
 
@@ -94,14 +94,13 @@ const composer = new EffectComposer(renderer);
 const renderPass = new RenderPass(scene, camera);
 composer.addPass(renderPass);
 
-// Bloom muy suave para objetos brillantes
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   0.3, // fuerza baja
-  0.1,  // radio
-  0.85  // threshold alto (solo lo muy brillante)
+  0.1, // radio
+  0.85 // threshold alto (solo lo muy brillante)
 );
-composer.addPass(bloomPass); // comentar si quieres desactivarlo completamente
+composer.addPass(bloomPass);
 
 // ======================================================
 // CONTROLES
@@ -146,7 +145,6 @@ loader.load(
           ("opacity" in mat && mat.opacity < 1);
 
         if (isGlassLike) {
-          // ajustes clave para evitar ghosting / halos
           mat.depthWrite = false;
           obj.renderOrder = 999;
           mat.side = THREE.DoubleSide;
@@ -154,13 +152,11 @@ loader.load(
           mat.blending = THREE.NormalBlending;
           mat.needsUpdate = true;
         } else {
-          // objetos opacos pueden recibir bloom
-          obj.layers.enable(1); // usar layer 1 para bloom
+          obj.layers.enable(1);
         }
       }
     });
 
-    // Animaciones Blender
     mixer = new THREE.AnimationMixer(model);
     mixer.timeScale = 0;
 
@@ -190,9 +186,39 @@ loader.load(
 const stats = new Stats();
 document.body.appendChild(stats.dom);
 
-// ======================================================
+// ======================
+// VARIABLES PARA PARALLAX (mouse + giroscopio)
+// ======================
+let mouseX = 0;
+let targetMouseX = 0;
+let gyroX = 0;
+let targetGyroX = 0;
+
+// ======================
+// EVENTO MOUSE
+// ======================
+window.addEventListener("mousemove", (event) => {
+  targetMouseX = (event.clientX / window.innerWidth - 0.5) * 2; // -1 a 1
+});
+
+// ======================
+// EVENTO GIROSCOPIO (Android / móviles)
+// ======================
+window.addEventListener("deviceorientation", (event) => {
+  // event.gamma es rotación en el eje Y del dispositivo (-90 a 90)
+  // invertimos para que coincida visualmente
+  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 30, -1, 1); 
+});
+
+// ======================
+// LERP Y SUAVIZADO
+// ======================
+const lerpFactor = 0.05; // suavizado
+const cameraTarget = new THREE.Vector3(0, 0.5, 0); // mirar al centro del modelo
+
+// ======================
 // ANIMATE LOOP
-// ======================================================
+// ======================
 function animate() {
   requestAnimationFrame(animate);
   stats.begin();
@@ -202,7 +228,15 @@ function animate() {
     mixer.update(delta);
   }
 
+  // suavizado mouse + giroscopio
+  mouseX += (targetMouseX - mouseX) * lerpFactor;
+  gyroX += (targetGyroX - gyroX) * lerpFactor;
+
+  const finalX = (mouseX + gyroX) * 0.5; // combinación de ambos inputs
+
   if (cameraGLB) {
+    cameraGLB.position.x = finalX; 
+    cameraGLB.lookAt(cameraTarget);
     composer.passes[0].camera = cameraGLB;
   }
 
@@ -217,6 +251,7 @@ function animate() {
 }
 
 animate();
+
 
 // ======================================================
 // RESIZE

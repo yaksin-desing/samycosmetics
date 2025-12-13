@@ -118,7 +118,7 @@ loader.load(
   (gltf) => {
     const model = gltf.scene;
     scene.add(model);
-    model.position.set(-0.2, -0.2, 0);
+    model.position.set(-0.2, -0.2, -0.2);
 
     gltf.scene.traverse((obj) => {
       if (obj.isCamera) {
@@ -208,7 +208,7 @@ window.addEventListener("mousemove", (event) => {
 window.addEventListener("deviceorientation", (event) => {
   // event.gamma es rotación en el eje Y del dispositivo (-90 a 90)
   // invertimos para que coincida visualmente
-  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 30, -2, 2); 
+  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 20, -3, 3); 
 });
 
 // ======================

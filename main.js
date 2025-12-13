@@ -208,7 +208,7 @@ window.addEventListener("mousemove", (event) => {
 window.addEventListener("deviceorientation", (event) => {
   // event.gamma es rotación en el eje Y del dispositivo (-90 a 90)
   // invertimos para que coincida visualmente
-  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 50, -1, 1); 
+  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 30, -2, 2); 
 });
 
 // ======================

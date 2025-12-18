@@ -185,7 +185,7 @@ loader.load(
 // STATS
 // ======================================================
 const stats = new Stats();
-document.body.appendChild(stats.dom);
+//document.body.appendChild(stats.dom);
 
 // ======================
 // VARIABLES PARA PARALLAX (mouse + giroscopio)

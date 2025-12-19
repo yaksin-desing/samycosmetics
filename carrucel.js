@@ -3,14 +3,23 @@ const total = items.length;
 let index = 0;
 
 // Parámetros del círculo acostado
-const radiusX = 150;
+const radiusX = 100;
 const radiusZ = 200;
 
 function updateCarousel() {
   items.forEach((item, i) => {
     const offset = ((i - index) + total) % total;
 
-    // Solo visibles
+    // limpiar estados
+    item.classList.remove(
+      'hidden',
+      'is-center',
+      'blur-full',
+      'blur-left',
+      'blur-right'
+    );
+
+    // visibles
     if (
       offset !== 0 &&
       offset !== 1 &&
@@ -22,45 +31,46 @@ function updateCarousel() {
       return;
     }
 
-    item.classList.remove('hidden');
-
     let x = 0;
     let z = 0;
     let scale = 1;
     let y = 0;
 
-    // CENTRO
+    // ===== CENTRO =====
     if (offset === 0) {
-      x = 0;
-      z = 0;
-      scale = 1.05;
+      scale = 0.8;
       y = -15;
+      item.classList.add('is-center');
     }
 
-    // DERECHA
+    // ===== DERECHA =====
     if (offset === 1) {
       x = radiusX;
       z = -radiusZ;
-      scale = 0.9;
+      scale = 0.7;
+      item.classList.add('blur-right');
     }
 
     if (offset === 2) {
       x = radiusX * 2;
       z = -radiusZ * 1.5;
-      scale = 0.8;
+      scale = 0.5;
+      item.classList.add('blur-full');
     }
 
-    // IZQUIERDA
+    // ===== IZQUIERDA =====
     if (offset === total - 1) {
       x = -radiusX;
       z = -radiusZ;
-      scale = 0.9;
+      scale = 0.7;
+      item.classList.add('blur-left');
     }
 
     if (offset === total - 2) {
       x = -radiusX * 2;
       z = -radiusZ * 1.5;
-      scale = 0.8;
+      scale = 0.5;
+      item.classList.add('blur-full');
     }
 
     item.style.transform = `
@@ -73,7 +83,11 @@ function updateCarousel() {
   });
 }
 
+
+
+// ==================
 // BOTONES
+// ==================
 document.getElementById('next').addEventListener('click', () => {
   index = (index + 1) % total;
   updateCarousel();
@@ -84,7 +98,9 @@ document.getElementById('prev').addEventListener('click', () => {
   updateCarousel();
 });
 
-// 👇 SWIPE ANDROID / MOBILE
+// ==================
+// SWIPE ANDROID / MOBILE
+// ==================
 let startX = 0;
 let currentX = 0;
 let dragging = false;
@@ -109,8 +125,10 @@ carousel.addEventListener('touchend', () => {
 
   if (Math.abs(diff) > threshold) {
     if (diff > 0) {
+      // swipe izquierda → siguiente
       index = (index + 1) % total;
     } else {
+      // swipe derecha → anterior
       index = (index - 1 + total) % total;
     }
     updateCarousel();
@@ -119,5 +137,7 @@ carousel.addEventListener('touchend', () => {
   dragging = false;
 });
 
+// ==================
 // INIT
+// ==================
 updateCarousel();

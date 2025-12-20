@@ -5,37 +5,41 @@
   font-style: normal;
 }
 
-html, body { 
-  width: 100vw; 
-  height: 100vh; 
-  margin: 0; 
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
   overflow: hidden;
 }
 
-#canvas-container { 
+#canvas-container {
   z-index: -2;
-  width: 100vw; 
-  height: 100vh; 
-  overflow: hidden; 
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
-canvas { display: block; }
+canvas {
+  display: block;
+}
 
-.stats { 
-  position: absolute; 
-  left: 0; 
-  top: 0; 
+.stats {
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 /* ===========================
    LOADING SCREEN
 =========================== */
 #loading-screen {
-    width: 100vw; 
-  height: 100vh; 
+  width: 100vw;
+  height: 100vh;
   position: fixed;
   inset: 0;
-  background: #00000010; /* transparente suave */
+  background: #00000010;
+  /* transparente suave */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,11 +59,13 @@ canvas { display: block; }
 }
 
 @keyframes spin {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 
-.nav{
+.nav {
   position: absolute;
   top: 0px;
   margin-top: 20px;
@@ -69,7 +75,8 @@ canvas { display: block; }
   justify-content: center;
   width: 100vw;
 }
-.nav img{
+
+.nav img {
   z-index: 0;
 }
 
@@ -85,13 +92,14 @@ canvas { display: block; }
   perspective: 1000px;
   display: flex;
   flex-direction: column;
+  overflow-x: visible;
 }
 
 .carousel-track {
   position: relative;
   width: 100%;
   height: 100%;
-  transform-style: preserve-3d;  
+  transform-style: preserve-3d;
 }
 
 
@@ -100,13 +108,13 @@ canvas { display: block; }
   top: 50%;
   left: 50%;
   width: 170px;
-  height:fit-content;
+  height: fit-content;
   border-radius: 9px;
   padding: 7px;
   background: #ffffff;
   transform-style: preserve-3d;
-   transform-origin: center center;
-  transition: 
+  transform-origin: center center;
+  transition:
     transform 0.6s ease,
     opacity 0.6s ease;
   display: flex;
@@ -114,7 +122,7 @@ canvas { display: block; }
   justify-content: center;
   flex-direction: column;
   border: 1px solid transparent;
-    filter: blur(0px);
+  filter: blur(0px);
   transition:
     transform 0.6s ease,
     opacity 0.6s ease,
@@ -124,11 +132,11 @@ canvas { display: block; }
 
 .item.is-center {
 
-    box-shadow: 
+  box-shadow:
     0 0px 17px rgba(0, 0, 0, 0.459);
 }
 
-.item .titulo_item{
+.item .titulo_item {
   font-family: "mona";
   width: 100%;
   text-align: center;
@@ -136,7 +144,7 @@ canvas { display: block; }
   color: #000000;
 }
 
-.item .color_item{
+.item .color_item {
   position: relative;
   width: 100%;
   height: 40px;
@@ -158,7 +166,7 @@ canvas { display: block; }
   width: 40%;
   display: flex;
   justify-content: space-between;
-  
+
 }
 
 @media (max-width: 868px) {
@@ -174,7 +182,7 @@ button {
   cursor: pointer;
 }
 
-.parrafo{
+.parrafo {
   margin-top: 1%;
   z-index: 9;
   color: #000000;

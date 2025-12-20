@@ -52,6 +52,7 @@ function updateCarousel() {
     if (offset === 0) {
       scale = 0.85;
       z = 0;
+      y = 7; // 👈 baja el item (ajusta el valor)
       item.classList.add('is-center');
     }
 
@@ -149,3 +150,11 @@ carousel.addEventListener('touchend', () => {
 // INIT
 // ==================
 updateCarousel();
+
+
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('item-btn')) {
+    const item = e.target.closest('.item');
+    console.log('Seleccionado:', item.querySelector('.titulo_item').innerText);
+  }
+});

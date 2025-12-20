@@ -28,6 +28,18 @@ function updateCarousel() {
       offset !== total - 2
     ) {
       item.classList.add('hidden');
+
+
+  // 👇 CLAVE: céntralo para que no afecte el alto
+  item.style.transform = `
+    translate(-50%, -50%)
+    translateY(-15px)
+    translateX(0px)
+    translateY(0px)
+    translateZ(0px)
+    scale(0.5)
+    z-index: -1000
+  `;
       return;
     }
 
@@ -39,7 +51,7 @@ function updateCarousel() {
     // ===== CENTRO =====
     if (offset === 0) {
       scale = 0.8;
-      y = -15;
+      y = -0;
       item.classList.add('is-center');
     }
 

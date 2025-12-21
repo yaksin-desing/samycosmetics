@@ -1,10 +1,20 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import {
+  GLTFLoader
+} from "three/addons/loaders/GLTFLoader.js";
+import {
+  OrbitControls
+} from "three/addons/controls/OrbitControls.js";
 import Stats from "three/addons/libs/stats.module.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import {
+  EffectComposer
+} from "three/addons/postprocessing/EffectComposer.js";
+import {
+  RenderPass
+} from "three/addons/postprocessing/RenderPass.js";
+import {
+  UnrealBloomPass
+} from "three/addons/postprocessing/UnrealBloomPass.js";
 
 // ======================================================
 // ESTADOS DE CARGA / CONTROL
@@ -13,6 +23,12 @@ let glbReady = false;
 let loaderHidden = false;
 let firstFrameRenderedAfterReady = false;
 let animationStarted = false;
+
+const materialesInteractivos = {
+  contenido: null,
+  mcontenido: null
+};
+
 
 const clock = new THREE.Clock(false);
 let mixer = null;
@@ -140,6 +156,17 @@ loader.load(
         const mat = obj.material;
         if (!mat) return;
 
+        if (obj.isMesh && obj.material) {
+          const matName = obj.material.name;
+
+          if (matName === 'contenido' || matName === 'mcontenido') {
+            materialesInteractivos[matName] = obj.material;
+            console.log(`🎨 Material "${matName}" detectado`);
+          }
+        }
+
+
+
         const isGlassLike =
           mat.transparent === true ||
           ("transmission" in mat && mat.transmission > 0) ||
@@ -208,7 +235,7 @@ window.addEventListener("mousemove", (event) => {
 window.addEventListener("deviceorientation", (event) => {
   // event.gamma es rotación en el eje Y del dispositivo (-90 a 90)
   // invertimos para que coincida visualmente
-  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 20, -3, 3); 
+  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 20, -3, 3);
 });
 
 // ======================
@@ -236,7 +263,7 @@ function animate() {
   const finalX = (mouseX + gyroX) * 0.5; // combinación de ambos inputs
 
   if (cameraGLB) {
-    cameraGLB.position.x = finalX; 
+    cameraGLB.position.x = finalX;
     cameraGLB.lookAt(cameraTarget);
     composer.passes[0].camera = cameraGLB;
   }
@@ -252,6 +279,21 @@ function animate() {
 }
 
 animate();
+
+window.addEventListener('carouselColorChange', (e) => {
+  const color = new THREE.Color(e.detail.color);
+
+  if (materialesInteractivos.contenido) {
+    materialesInteractivos.contenido.color.set(color);
+    materialesInteractivos.contenido.needsUpdate = true;
+  }
+
+  if (materialesInteractivos.mcontenido) {
+    materialesInteractivos.mcontenido.color.set(color);
+    materialesInteractivos.mcontenido.needsUpdate = true;
+  }
+});
+
 
 
 // ======================================================

@@ -8,6 +8,25 @@ const radiusX = 100;
 const radiusZ = 200;
 
 // ==================
+// EMITIR COLOR DEL ITEM CENTRAL
+// ==================
+function emitCenterColor() {
+  const centerItem = document.querySelector('.item.is-center');
+  if (!centerItem) return;
+
+  const colorDiv = centerItem.querySelector('.color_item');
+  if (!colorDiv) return;
+
+  const bgColor = getComputedStyle(colorDiv).backgroundColor;
+
+  window.dispatchEvent(
+    new CustomEvent('carouselColorChange', {
+      detail: { color: bgColor }
+    })
+  );
+}
+
+// ==================
 // CORE
 // ==================
 function updateCarousel() {
@@ -52,7 +71,7 @@ function updateCarousel() {
     if (offset === 0) {
       scale = 0.85;
       z = 0;
-      y = 7; // 👈 baja el item (ajusta el valor)
+      y = 7;
       item.classList.add('is-center');
     }
 
@@ -94,6 +113,9 @@ function updateCarousel() {
       scale(${scale})
     `;
   });
+
+  // 🔥 EMITE EL COLOR SOLO CUANDO EL CARRUSEL SE ACTUALIZA
+  emitCenterColor();
 }
 
 // ==================
@@ -136,9 +158,9 @@ carousel.addEventListener('touchend', () => {
 
   if (Math.abs(diff) > threshold) {
     if (diff > 0) {
-      index = (index + 1) % total; // swipe left
+      index = (index + 1) % total;
     } else {
-      index = (index - 1 + total) % total; // swipe right
+      index = (index - 1 + total) % total;
     }
     updateCarousel();
   }
@@ -151,10 +173,15 @@ carousel.addEventListener('touchend', () => {
 // ==================
 updateCarousel();
 
-
+// ==================
+// CLICK EN BOTÓN
+// ==================
 document.addEventListener('click', (e) => {
   if (e.target.classList.contains('item-btn')) {
     const item = e.target.closest('.item');
-    console.log('Seleccionado:', item.querySelector('.titulo_item').innerText);
+    console.log(
+      'Seleccionado:',
+      item.querySelector('.titulo_item').innerText
+    );
   }
 });

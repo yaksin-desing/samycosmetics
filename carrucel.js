@@ -3,12 +3,12 @@ const total = items.length;
 
 let index = 0;
 
-// Parámetros del círculo
+// Parámetros del círculo acostado
 const radiusX = 100;
 const radiusZ = 200;
 
 // ==================
-// EMITIR COLOR ITEM CENTRAL
+// EMITIR COLOR DEL ITEM CENTRAL
 // ==================
 function emitCenterColor() {
   const centerItem = document.querySelector('.item.is-center');
@@ -109,76 +109,60 @@ function updateCarousel() {
 // ==================
 // BOTONES NEXT / PREV
 // ==================
-document.getElementById('next').onclick = () => {
+document.getElementById('next').addEventListener('click', () => {
   index = (index + 1) % total;
   updateCarousel();
-};
+});
 
-document.getElementById('prev').onclick = () => {
+document.getElementById('prev').addEventListener('click', () => {
   index = (index - 1 + total) % total;
   updateCarousel();
-};
+});
 
 // ==================
-// SWIPE MOBILE (FIX ANDROID)
+// SWIPE ANDROID (FIXED)
 // ==================
 let startX = 0;
 let currentX = 0;
 let isDragging = false;
-let isTouchOnButton = false;
+let isButtonTouch = false;
 const threshold = 40;
 
 const carousel = document.querySelector('.carousel');
 
-carousel.addEventListener(
-  'touchstart',
-  (e) => {
-    // ⛔ Si el toque es en un botón → NO activar swipe
-    if (e.target.closest('.item-btn')) {
-      isTouchOnButton = true;
-      return;
-    }
+carousel.addEventListener('touchstart', (e) => {
+  startX = e.touches[0].clientX;
+  isDragging = true;
 
-    startX = e.touches[0].clientX;
-    currentX = startX;
-    isDragging = true;
-    isTouchOnButton = false;
-  },
-  { passive: true }
-);
+  // 🔥 Si el toque empezó en un botón, NO activar swipe
+  isButtonTouch = e.target.closest('.item-btn') !== null;
+}, { passive: true });
 
-carousel.addEventListener(
-  'touchmove',
-  (e) => {
-    if (!isDragging || isTouchOnButton) return;
-    currentX = e.touches[0].clientX;
-  },
-  { passive: true }
-);
+carousel.addEventListener('touchmove', (e) => {
+  if (!isDragging || isButtonTouch) return;
+  currentX = e.touches[0].clientX;
+}, { passive: true });
 
-carousel.addEventListener(
-  'touchend',
-  () => {
-    if (!isDragging || isTouchOnButton) {
-      isDragging = false;
-      isTouchOnButton = false;
-      return;
-    }
-
-    const diff = startX - currentX;
-
-    if (Math.abs(diff) > threshold) {
-      index = diff > 0
-        ? (index + 1) % total
-        : (index - 1 + total) % total;
-
-      updateCarousel();
-    }
-
+carousel.addEventListener('touchend', () => {
+  if (!isDragging || isButtonTouch) {
     isDragging = false;
-  },
-  { passive: true }
-);
+    isButtonTouch = false;
+    return;
+  }
+
+  const diff = startX - currentX;
+
+  if (Math.abs(diff) > threshold) {
+    index = diff > 0
+      ? (index + 1) % total
+      : (index - 1 + total) % total;
+
+    updateCarousel();
+  }
+
+  isDragging = false;
+  isButtonTouch = false;
+});
 
 // ==================
 // INIT
@@ -186,15 +170,15 @@ carousel.addEventListener(
 updateCarousel();
 
 // ==================
-// POPUP DATA
+// DATA POPUP
 // ==================
 const popupData = {
-  LATTE: { description: 'Café suave con leche cremosa.', price: '$12.000' },
-  MACCHIATO: { description: 'Espresso con un toque de leche.', price: '$13.000' },
-  CAPPUCCINO: { description: 'Equilibrio perfecto entre café y espuma.', price: '$14.000' },
-  MOCHA: { description: 'Café con chocolate intenso.', price: '$15.000' },
-  AMARETTO: { description: 'Café aromatizado con licor.', price: '$16.000' },
-  ESPRESSO: { description: 'Café fuerte y concentrado.', price: '$10.000' }
+  LATTE: { description: 'Café suave con leche cremosa.' },
+  MACCHIATO: { description: 'Espresso con un toque de leche.' },
+  CAPPUCCINO: { description: 'Equilibrio perfecto entre café y espuma.' },
+  MOCHA: { description: 'Café con chocolate intenso.' },
+  AMARETTO: { description: 'Café aromatizado con licor.' },
+  ESPRESSO: { description: 'Café fuerte y concentrado.' }
 };
 
 // ==================
@@ -206,28 +190,35 @@ const popupDescription = document.getElementById('popup-description');
 const popupColor = document.getElementById('popup-color');
 const popupClose = document.querySelector('.popup-close');
 
-// ⚠️ IMPORTANTE: usar pointerdown
-document.addEventListener('pointerdown', (e) => {
+// 🔥 USAMOS touchend + click (tap instantáneo)
+document.addEventListener('touchend', openPopup);
+document.addEventListener('click', openPopup);
+
+function openPopup(e) {
   const btn = e.target.closest('.item-btn');
   if (!btn) return;
 
-  e.stopPropagation();
   e.preventDefault();
 
   const item = btn.closest('.item');
   const title = item.querySelector('.titulo_item').innerText;
-  const color = getComputedStyle(item.querySelector('.color_item')).backgroundColor;
+  const color = getComputedStyle(
+    item.querySelector('.color_item')
+  ).backgroundColor;
 
   popupTitle.innerText = title;
-  popupDescription.innerText = popupData[title]?.description || '';
-  popupColor.style.background = color;
+  popupDescription.innerText =
+    popupData[title]?.description || '';
 
+  popupColor.style.background = color;
   popup.classList.add('active');
+}
+
+// Cerrar popup
+popupClose.addEventListener('click', () => {
+  popup.classList.remove('active');
 });
 
-// CERRAR POPUP
-popupClose.onclick = () => popup.classList.remove('active');
-
-popup.onclick = (e) => {
+popup.addEventListener('click', (e) => {
   if (e.target === popup) popup.classList.remove('active');
-};
+});

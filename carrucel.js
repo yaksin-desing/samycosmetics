@@ -185,3 +185,77 @@ document.addEventListener('click', (e) => {
     );
   }
 });
+
+
+
+
+// ==================
+// DATA DEL POPUP (PERSONALIZABLE)
+// ==================
+const popupData = {
+  LATTE: {
+    description: 'Café suave con leche cremosa.',
+    price: '$12.000'
+  },
+  MACCHIATO: {
+    description: 'Espresso con un toque de leche.',
+    price: '$13.000'
+  },
+  CAPPUCCINO: {
+    description: 'Equilibrio perfecto entre café y espuma.',
+    price: '$14.000'
+  },
+  MOCHA: {
+    description: 'Café con chocolate intenso.',
+    price: '$15.000'
+  },
+  AMARETTO: {
+    description: 'Café aromatizado con licor.',
+    price: '$16.000'
+  },
+  ESPRESSO: {
+    description: 'Café fuerte y concentrado.',
+    price: '$10.000'
+  }
+};
+
+// ==================
+// POPUP LOGIC
+// ==================
+const popup = document.getElementById('popup');
+const popupTitle = document.getElementById('popup-title');
+const popupDescription = document.getElementById('popup-description');
+const popupColor = document.getElementById('popup-color');
+const popupClose = document.querySelector('.popup-close');
+
+// ABRIR POPUP
+document.addEventListener('click', (e) => {
+  if (!e.target.classList.contains('item-btn')) return;
+
+  const item = e.target.closest('.item');
+  const title = item.querySelector('.titulo_item').innerText;
+  const color = getComputedStyle(
+    item.querySelector('.color_item')
+  ).backgroundColor;
+
+  popupTitle.innerText = title;
+  popupDescription.innerText =
+    popupData[title]?.description || 'Descripción no disponible';
+
+  popupColor.style.background = color;
+
+  popup.classList.add('active');
+});
+
+// CERRAR POPUP
+popupClose.addEventListener('click', () => {
+  popup.classList.remove('active');
+});
+
+// CERRAR AL CLICK FUERA
+popup.addEventListener('click', (e) => {
+  if (e.target === popup) {
+    popup.classList.remove('active');
+  }
+});
+

@@ -1,20 +1,10 @@
 import * as THREE from "three";
-import {
-  GLTFLoader
-} from "three/addons/loaders/GLTFLoader.js";
-import {
-  OrbitControls
-} from "three/addons/controls/OrbitControls.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import Stats from "three/addons/libs/stats.module.js";
-import {
-  EffectComposer
-} from "three/addons/postprocessing/EffectComposer.js";
-import {
-  RenderPass
-} from "three/addons/postprocessing/RenderPass.js";
-import {
-  UnrealBloomPass
-} from "three/addons/postprocessing/UnrealBloomPass.js";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 // ======================================================
 // ESTADOS DE CARGA / CONTROL
@@ -24,16 +14,25 @@ let loaderHidden = false;
 let firstFrameRenderedAfterReady = false;
 let animationStarted = false;
 
+const clock = new THREE.Clock(false);
+let mixer = null;
+let cameraGLB = null;
+let animationsEnded = false;
+
+// ======================================================
+// MATERIALES INTERACTIVOS + TRANSICIONES
+// ======================================================
 const materialesInteractivos = {
   contenido: null,
   mcontenido: null
 };
 
+const colorTargets = {
+  contenido: new THREE.Color(),
+  mcontenido: new THREE.Color()
+};
 
-const clock = new THREE.Clock(false);
-let mixer = null;
-let cameraGLB = null;
-let animationsEnded = false;
+const colorLerpSpeed = 0.08;
 
 // ======================================================
 // OCULTAR LOADER
@@ -46,7 +45,6 @@ function hideLoader() {
   setTimeout(() => {
     loader.style.display = "none";
     loaderHidden = true;
-    console.log("🟢 Loader oculto completamente");
   }, 600);
 }
 
@@ -57,7 +55,6 @@ function startIfReady() {
   if (animationStarted) return;
   if (glbReady && loaderHidden && firstFrameRenderedAfterReady) {
     animationStarted = true;
-    console.log("🔥 Todo listo → iniciando animación");
     if (mixer) {
       mixer.timeScale = 1;
       clock.start();
@@ -99,22 +96,19 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.85;
 renderer.outputEncoding = THREE.sRGBEncoding;
-renderer.sortObjects = true;
-renderer.physicallyCorrectLights = false;
 container.appendChild(renderer.domElement);
 
 // ======================================================
-// POST FX (Bloom solo para objetos brillantes, no vidrio)
+// POST FX
 // ======================================================
 const composer = new EffectComposer(renderer);
-const renderPass = new RenderPass(scene, camera);
-composer.addPass(renderPass);
+composer.addPass(new RenderPass(scene, camera));
 
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.3, // fuerza baja
-  0.1, // radio
-  0.85 // threshold alto (solo lo muy brillante)
+  0.05,
+  0.1,
+  0.1
 );
 composer.addPass(bloomPass);
 
@@ -136,49 +130,36 @@ loader.load(
     scene.add(model);
     model.position.set(-0.2, -0.2, -0.2);
 
-    gltf.scene.traverse((obj) => {
+    model.traverse((obj) => {
       if (obj.isCamera) {
         cameraGLB = obj;
         controls.enabled = false;
         cameraGLB.fov = 70;
         cameraGLB.aspect = window.innerWidth / window.innerHeight;
-        cameraGLB.near = 0.1;
-        cameraGLB.far = 700;
         cameraGLB.updateProjectionMatrix();
-        console.log("📷 Cámara GLB enlazada");
         return;
       }
 
-      if (obj.isMesh) {
+      if (obj.isMesh && obj.material) {
         obj.castShadow = true;
         obj.receiveShadow = true;
 
-        const mat = obj.material;
-        if (!mat) return;
+        const matName = obj.material.name;
 
-        if (obj.isMesh && obj.material) {
-          const matName = obj.material.name;
-
-          if (matName === 'contenido' || matName === 'mcontenido') {
-            materialesInteractivos[matName] = obj.material;
-            console.log(`🎨 Material "${matName}" detectado`);
-          }
+        if (matName === "contenido" || matName === "mcontenido") {
+          materialesInteractivos[matName] = obj.material;
+          colorTargets[matName].copy(obj.material.color);
         }
 
-
-
+        const mat = obj.material;
         const isGlassLike =
-          mat.transparent === true ||
-          ("transmission" in mat && mat.transmission > 0) ||
-          ("opacity" in mat && mat.opacity < 1);
+          mat.transparent ||
+          mat.transmission > 0 ||
+          mat.opacity < 1;
 
         if (isGlassLike) {
           mat.depthWrite = false;
-          obj.renderOrder = 999;
           mat.side = THREE.DoubleSide;
-          mat.premultipliedAlpha = true;
-          mat.blending = THREE.NormalBlending;
-          mat.needsUpdate = true;
         } else {
           obj.layers.enable(1);
         }
@@ -195,77 +176,63 @@ loader.load(
       action.play();
     });
 
-    mixer.addEventListener("finished", () => {
-      animationsEnded = true;
-      console.log("🎬 Animación terminada");
-    });
-
     glbReady = true;
-    console.log("🟢 GLB cargado");
     hideLoader();
-  },
-  undefined,
-  (err) => console.error("Error GLB:", err)
+  }
 );
 
 // ======================================================
-// STATS
+// PARALLAX INPUT
 // ======================================================
-const stats = new Stats();
-//document.body.appendChild(stats.dom);
-
-// ======================
-// VARIABLES PARA PARALLAX (mouse + giroscopio)
-// ======================
 let mouseX = 0;
 let targetMouseX = 0;
 let gyroX = 0;
 let targetGyroX = 0;
 
-// ======================
-// EVENTO MOUSE
-// ======================
-window.addEventListener("mousemove", (event) => {
-  targetMouseX = (event.clientX / window.innerWidth - 0.5) * 2; // -1 a 1
+window.addEventListener("mousemove", (e) => {
+  targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
 });
 
-// ======================
-// EVENTO GIROSCOPIO (Android / móviles)
-// ======================
-window.addEventListener("deviceorientation", (event) => {
-  // event.gamma es rotación en el eje Y del dispositivo (-90 a 90)
-  // invertimos para que coincida visualmente
-  targetGyroX = THREE.MathUtils.clamp(-event.gamma / 20, -3, 3);
+window.addEventListener("deviceorientation", (e) => {
+  targetGyroX = THREE.MathUtils.clamp(-e.gamma / 20, -3, 3);
 });
 
-// ======================
-// LERP Y SUAVIZADO
-// ======================
-const lerpFactor = 0.05; // suavizado
-const cameraTarget = new THREE.Vector3(0, 0.5, 0); // mirar al centro del modelo
+const lerpFactor = 0.05;
+const cameraTarget = new THREE.Vector3(0, 0.5, 0);
 
-// ======================
+// ======================================================
 // ANIMATE LOOP
-// ======================
+// ======================================================
 function animate() {
   requestAnimationFrame(animate);
-  stats.begin();
 
   const delta = clock.getDelta();
-  if (mixer && !animationsEnded && clock.running) {
+  if (mixer && clock.running && !animationsEnded) {
     mixer.update(delta);
   }
 
-  // suavizado mouse + giroscopio
   mouseX += (targetMouseX - mouseX) * lerpFactor;
   gyroX += (targetGyroX - gyroX) * lerpFactor;
 
-  const finalX = (mouseX + gyroX) * 0.5; // combinación de ambos inputs
-
   if (cameraGLB) {
-    cameraGLB.position.x = finalX;
+    cameraGLB.position.x = (mouseX + gyroX) * 0.5;
     cameraGLB.lookAt(cameraTarget);
     composer.passes[0].camera = cameraGLB;
+  }
+
+  // 🔥 TRANSICIÓN SUAVE DE COLORES
+  if (materialesInteractivos.contenido) {
+    materialesInteractivos.contenido.color.lerp(
+      colorTargets.contenido,
+      colorLerpSpeed
+    );
+  }
+
+  if (materialesInteractivos.mcontenido) {
+    materialesInteractivos.mcontenido.color.lerp(
+      colorTargets.mcontenido,
+      colorLerpSpeed
+    );
   }
 
   composer.render();
@@ -274,27 +241,24 @@ function animate() {
     firstFrameRenderedAfterReady = true;
     startIfReady();
   }
-
-  stats.end();
 }
 
 animate();
 
-window.addEventListener('carouselColorChange', (e) => {
-  const color = new THREE.Color(e.detail.color);
+// ======================================================
+// EVENTO DESDE EL CARRUSEL
+// ======================================================
+window.addEventListener("carouselColorChange", (e) => {
+  const baseColor = new THREE.Color(e.detail.color);
 
   if (materialesInteractivos.contenido) {
-    materialesInteractivos.contenido.color.set(color);
-    materialesInteractivos.contenido.needsUpdate = true;
+    colorTargets.contenido.copy(baseColor);
   }
 
   if (materialesInteractivos.mcontenido) {
-    materialesInteractivos.mcontenido.color.set(color);
-    materialesInteractivos.mcontenido.needsUpdate = true;
+    colorTargets.mcontenido.copy(baseColor).multiplyScalar(0.85);
   }
 });
-
-
 
 // ======================================================
 // RESIZE
@@ -302,10 +266,12 @@ window.addEventListener('carouselColorChange', (e) => {
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+
   if (cameraGLB) {
     cameraGLB.aspect = window.innerWidth / window.innerHeight;
     cameraGLB.updateProjectionMatrix();
   }
+
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });

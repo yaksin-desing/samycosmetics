@@ -9,37 +9,31 @@ const video = document.getElementById('camera-video');
 const canvas = document.getElementById('camera-canvas');
 const ctx = canvas.getContext('2d');
 
+// ===============================
+// STATE
+// ===============================
 let stream = null;
-let faceMesh = null;
 let cameraMP = null;
+let faceMesh = null;
 let running = false;
+let faceMeshReady = false;
 
-// ===============================
-// COLOR STATE
-// ===============================
 let currentLipColor = 'rgba(200,0,80,0.55)';
 
 // ===============================
-// SMOOTHING (FAST & RESPONSIVE)
-// ===============================
-let smoothLandmarks = null;
-const SMOOTH = 0.6;
-
-// ===============================
-// LIP LANDMARKS (PRECISOS)
+// LANDMARKS (OFICIALES MEDIAPIPE)
 // ===============================
 
-// Contorno externo completo
+// Contorno externo del labio (solo piel)
 const LIPS_OUTER = [
   61,185,40,39,37,0,267,269,270,409,291,
   375,321,405,314,17,84,181,91,146
 ];
 
-// Contorno interno REAL (excluye dientes)
+// Contorno interno del labio (para vaciar interior)
 const LIPS_INNER = [
-  78,191,80,81,82,13,
-  312,311,310,415,308,
-  324,318,402,317,14,87
+  78,95,88,178,87,14,
+  317,402,318,324,308
 ];
 
 // ===============================
@@ -52,7 +46,11 @@ async function openCamera() {
   cameraPopup.classList.add('active');
 
   stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'user' },
+    video: {
+      facingMode: 'user',
+      width: { ideal: 720 },
+      height: { ideal: 1280 }
+    },
     audio: false
   });
 
@@ -68,11 +66,7 @@ function closeCamera() {
   cameraPopup.classList.remove('active');
 
   if (cameraMP) cameraMP.stop();
-  if (faceMesh) faceMesh.close();
-
   cameraMP = null;
-  faceMesh = null;
-  smoothLandmarks = null;
 
   if (stream) {
     stream.getTracks().forEach(t => t.stop());
@@ -83,92 +77,87 @@ function closeCamera() {
 }
 
 // ===============================
-// MEDIAPIPE
+// MEDIAPIPE INIT (UNA SOLA VEZ)
 // ===============================
 function initFaceMesh() {
+  if (faceMeshReady) return;
+  faceMeshReady = true;
+
   faceMesh = new FaceMesh({
-    locateFile: f =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+    locateFile: (file) =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/${file}`
   });
 
   faceMesh.setOptions({
     maxNumFaces: 1,
     refineLandmarks: true,
-    minDetectionConfidence: 0.6,
-    minTrackingConfidence: 0.6
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
   });
 
   faceMesh.onResults(onResults);
 
   cameraMP = new Camera(video, {
     onFrame: async () => {
-      if (running) await faceMesh.send({ image: video });
+      if (running) {
+        await faceMesh.send({ image: video });
+      }
     },
-    width: 640,
-    height: 480
+    width: 480,
+    height: 360
   });
 
   cameraMP.start();
 }
 
 // ===============================
-// DRAW LIPS (EVEN-ODD MASK)
+// DRAW HELPERS
 // ===============================
-function drawLipsMask(landmarks) {
+function drawPath(indices, landmarks) {
   ctx.beginPath();
-
-  // Outer
-  LIPS_OUTER.forEach((i, idx) => {
+  indices.forEach((i, idx) => {
     const p = landmarks[i];
     const x = p.x * canvas.width;
     const y = p.y * canvas.height;
     idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
   ctx.closePath();
-
-  // Inner (hole)
-  LIPS_INNER.forEach((i, idx) => {
-    const p = landmarks[i];
-    const x = p.x * canvas.width;
-    const y = p.y * canvas.height;
-    idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.closePath();
-
-  ctx.fill('evenodd');
+  ctx.fill();
 }
 
 // ===============================
-// RESULTS
+// RESULTS (ULTRA FLUIDO)
 // ===============================
 function onResults(results) {
   if (!results.multiFaceLandmarks?.length) return;
 
-  const raw = results.multiFaceLandmarks[0];
-
-  // FAST SMOOTH
-  if (!smoothLandmarks) {
-    smoothLandmarks = raw.map(p => ({ ...p }));
-  } else {
-    raw.forEach((p, i) => {
-      smoothLandmarks[i].x += (p.x - smoothLandmarks[i].x) * (1 - SMOOTH);
-      smoothLandmarks[i].y += (p.y - smoothLandmarks[i].y) * (1 - SMOOTH);
-    });
-  }
+  const lm = results.multiFaceLandmarks[0];
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Adaptive softness
-  const lipWidth =
-    Math.abs(smoothLandmarks[61].x - smoothLandmarks[291].x) * canvas.width;
-
   ctx.save();
+
+  // ===============================
+  // COLOR BASE
+  // ===============================
+  ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = currentLipColor;
-  ctx.globalAlpha = 0.9;
+  ctx.globalAlpha = 0.55;
+
+  // Ligero blur solo visual (NO smoothing matemático)
+  const lipWidth =
+    Math.abs(lm[61].x - lm[291].x) * canvas.width;
+
   ctx.shadowColor = currentLipColor;
   ctx.shadowBlur = lipWidth * 0.08;
 
-  drawLipsMask(smoothLandmarks);
+  // 1️⃣ Pintar labio completo
+  drawPath(LIPS_OUTER, lm);
+
+  // 2️⃣ Vaciar interior (NO dientes, NO lengua)
+  ctx.globalCompositeOperation = 'destination-out';
+  drawPath(LIPS_INNER, lm);
+
   ctx.restore();
 }
 
@@ -176,9 +165,11 @@ function onResults(results) {
 // RESIZE
 // ===============================
 function resizeCanvas() {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
 }
+
+window.addEventListener('resize', resizeCanvas);
 
 // ===============================
 // COLOR FROM CAROUSEL
@@ -194,4 +185,3 @@ window.addEventListener('carouselColorChange', e => {
 // ===============================
 openBtn.addEventListener('click', openCamera);
 closeBtn.addEventListener('click', closeCamera);
-window.addEventListener('resize', resizeCanvas);

@@ -1,5 +1,6 @@
-// lipFilter.js
-
+// ===============================
+// ELEMENTS
+// ===============================
 const cameraPopup = document.getElementById('camera-popup');
 const openBtn = document.getElementById('try-lips-btn');
 const closeBtn = document.getElementById('close-camera');
@@ -9,16 +10,26 @@ const canvas = document.getElementById('camera-canvas');
 const ctx = canvas.getContext('2d');
 
 let stream = null;
-let currentLipColor = 'rgba(200,0,80,0.55)';
 let faceMesh = null;
 let cameraMP = null;
 
+// Color desde carrusel
+let currentLipColor = 'rgba(200,0,80,0.6)';
+
 // ===============================
-// LIPS INDICES
+// MEDIAPIPE INDICES OFICIALES
 // ===============================
-const LIPS = [
-  61,146,91,181,84,17,314,405,321,375,291,
-  308,324,318,402,317,14,87,178,88,95,78
+
+// Contorno externo completo de labios (UNA SOLA MALLA)
+const LIPS_OUTER = [
+  61,185,40,39,37,0,267,269,270,409,291,
+  375,321,405,314,17,84,181,91,146,61
+];
+
+// Boca interna (dientes + lengua)
+const MOUTH_INNER = [
+  78,95,88,178,87,14,
+  317,402,318,324,308
 ];
 
 // ===============================
@@ -28,7 +39,11 @@ async function openCamera() {
   cameraPopup.classList.add('active');
 
   stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'user' },
+    video: {
+      facingMode: 'user',
+      width: { ideal: 720 },
+      height: { ideal: 1280 }
+    },
     audio: false
   });
 
@@ -40,7 +55,7 @@ async function openCamera() {
 }
 
 // ===============================
-// CLOSE CAMERA (FIXED)
+// CLOSE CAMERA
 // ===============================
 function closeCamera() {
   cameraPopup.classList.remove('active');
@@ -59,11 +74,11 @@ function closeCamera() {
 }
 
 // ===============================
-// MEDIAPIPE INIT
+// MEDIAPIPE INIT (OPTIMIZED)
 // ===============================
 function initFaceMesh() {
   faceMesh = new FaceMesh({
-    locateFile: (file) =>
+    locateFile: file =>
       `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
   });
 
@@ -80,15 +95,30 @@ function initFaceMesh() {
     onFrame: async () => {
       await faceMesh.send({ image: video });
     },
-    width: 640,
-    height: 480
+    width: 480,
+    height: 360
   });
 
   cameraMP.start();
 }
 
 // ===============================
-// DRAW LIPS
+// DRAW PATH
+// ===============================
+function drawPath(indices, landmarks) {
+  ctx.beginPath();
+  indices.forEach((i, idx) => {
+    const p = landmarks[i];
+    const x = p.x * canvas.width;
+    const y = p.y * canvas.height;
+    idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ===============================
+// ON RESULTS (FINAL LOGIC)
 // ===============================
 function onResults(results) {
   if (!results.multiFaceLandmarks?.length) return;
@@ -98,18 +128,19 @@ function onResults(results) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.save();
 
-  ctx.beginPath();
-  LIPS.forEach((i, index) => {
-    const p = landmarks[i];
-    const x = p.x * canvas.width;
-    const y = p.y * canvas.height;
-    index === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-  });
-  ctx.closePath();
-
-  ctx.fillStyle = currentLipColor;
+  // 🎨 1. Pintar labios completos
   ctx.globalCompositeOperation = 'source-over';
-  ctx.fill();
+  ctx.fillStyle = currentLipColor;
+  ctx.globalAlpha = 0.65;
+
+  ctx.shadowColor = currentLipColor;
+  ctx.shadowBlur = 8;
+
+  drawPath(LIPS_OUTER, landmarks);
+
+  // ✂️ 2. Quitar boca interna (dientes + lengua)
+  ctx.globalCompositeOperation = 'destination-out';
+  drawPath(MOUTH_INNER, landmarks);
 
   ctx.restore();
 }
@@ -129,7 +160,8 @@ window.addEventListener('resize', resizeCanvas);
 // ===============================
 window.addEventListener('carouselColorChange', (e) => {
   const rgb = e.detail.color.match(/\d+/g);
-  currentLipColor = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.55)`;
+  if (!rgb) return;
+  currentLipColor = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.65)`;
 });
 
 // ===============================

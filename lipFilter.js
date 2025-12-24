@@ -20,29 +20,25 @@ let running = false;
 let currentLipColor = 'rgba(200,0,80,0.55)';
 
 // ===============================
-// SMOOTHING (ULTRA FAST)
+// SMOOTHING (RÁPIDO + RESPONSIVE)
 // ===============================
 let smoothLandmarks = null;
-const SMOOTH = 0.55; // balance perfecto fluidez / precisión
+const SMOOTH = 0.55;
 
 // ===============================
-// LANDMARKS (PRECISOS)
+// LANDMARKS (LABIOS REALES)
 // ===============================
-
-// Contorno externo real del labio
 const LIPS_OUTER = [
   61,185,40,39,37,0,267,269,270,409,291,
   375,321,405,314,17,84,181,91,146
 ];
 
-// Contorno interno del labio (NO dientes)
 const LIPS_INNER = [
   78,191,80,81,82,13,
   312,311,310,415,308,
   324,318,402,317,14,87
 ];
 
-// Hueco real de la boca (solo cuando se abre)
 const MOUTH_OPENING = [
   13,312,311,310,415,308,
   324,318,402,317,14,87
@@ -115,35 +111,57 @@ function initFaceMesh() {
       if (running) await faceMesh.send({ image: video });
     },
     width: 480,
-    height: 360 // 🔥 CLAVE: menor resolución = más FPS
+    height: 360 // 🔥 FPS alto
   });
 
   cameraMP.start();
 }
 
 // ===============================
-// DRAW LIPS MASK (EVEN-ODD)
+// ANDROID ASPECT RATIO FIX
 // ===============================
-function drawLipsMask(landmarks) {
+function getAspectFix() {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const cw = canvas.width;
+  const ch = canvas.height;
+
+  if (!vw || !vh) return { scaleX: 1, offsetX: 0 };
+
+  const videoAR = vw / vh;
+  const canvasAR = cw / ch;
+
+  if (Math.abs(videoAR - canvasAR) < 0.01) {
+    return { scaleX: 1, offsetX: 0 };
+  }
+
+  const scaleX = videoAR / canvasAR;
+  const offsetX = (1 - scaleX) / 2;
+
+  return { scaleX, offsetX };
+}
+
+// ===============================
+// DRAW LIPS MASK
+// ===============================
+function drawLipsMask(landmarks, fix) {
   ctx.beginPath();
 
   // OUTER
   LIPS_OUTER.forEach((i, idx) => {
     const p = landmarks[i];
-    ctx[idx === 0 ? 'moveTo' : 'lineTo'](
-      p.x * canvas.width,
-      p.y * canvas.height
-    );
+    const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
+    const y = p.y * canvas.height;
+    idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
   ctx.closePath();
 
-  // INNER LIP
+  // INNER (HOLE)
   LIPS_INNER.forEach((i, idx) => {
     const p = landmarks[i];
-    ctx[idx === 0 ? 'moveTo' : 'lineTo'](
-      p.x * canvas.width,
-      p.y * canvas.height
-    );
+    const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
+    const y = p.y * canvas.height;
+    idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
   ctx.closePath();
 
@@ -151,14 +169,14 @@ function drawLipsMask(landmarks) {
 }
 
 // ===============================
-// RESULTS (RÁPIDO + PRECISO)
+// RESULTS
 // ===============================
 function onResults(results) {
   if (!results.multiFaceLandmarks?.length) return;
 
   const raw = results.multiFaceLandmarks[0];
 
-  // 🔥 FAST SMOOTH
+  // FAST SMOOTH
   if (!smoothLandmarks) {
     smoothLandmarks = raw.map(p => ({ ...p }));
   } else {
@@ -170,38 +188,32 @@ function onResults(results) {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // ===============================
-  // ADAPTIVE LIP WIDTH (MOBILE FIX)
-  // ===============================
+  const fix = getAspectFix();
+
   const lipWidth =
     Math.abs(smoothLandmarks[61].x - smoothLandmarks[291].x) * canvas.width;
 
   ctx.save();
   ctx.fillStyle = currentLipColor;
   ctx.globalAlpha = 0.85;
-
-  // Blur MUY controlado (no lag)
   ctx.shadowColor = currentLipColor;
   ctx.shadowBlur = lipWidth * 0.06;
 
-  // 1️⃣ Labios
-  drawLipsMask(smoothLandmarks);
+  // LABIOS
+  drawLipsMask(smoothLandmarks, fix);
 
-  // 2️⃣ Quitar dientes SOLO si la boca se abre
+  // BOCA ABIERTA → quitar interior
   const mouthOpen =
-    Math.abs(
-      smoothLandmarks[13].y - smoothLandmarks[14].y
-    ) * canvas.height;
+    Math.abs(smoothLandmarks[13].y - smoothLandmarks[14].y) * canvas.height;
 
   if (mouthOpen > lipWidth * 0.08) {
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     MOUTH_OPENING.forEach((i, idx) => {
       const p = smoothLandmarks[i];
-      ctx[idx === 0 ? 'moveTo' : 'lineTo'](
-        p.x * canvas.width,
-        p.y * canvas.height
-      );
+      const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
+      const y = p.y * canvas.height;
+      idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
     });
     ctx.closePath();
     ctx.fill();
@@ -214,11 +226,8 @@ function onResults(results) {
 // RESIZE
 // ===============================
 function resizeCanvas() {
-  const vw = video.videoWidth || 640;
-  const vh = video.videoHeight || 480;
-
-  canvas.width = vw;
-  canvas.height = vh;
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
 }
 
 window.addEventListener('resize', resizeCanvas);

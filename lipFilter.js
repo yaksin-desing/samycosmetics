@@ -20,13 +20,13 @@ let running = false;
 let currentLipColor = 'rgba(200,0,80,0.55)';
 
 // ===============================
-// SMOOTHING (RÁPIDO + RESPONSIVE)
+// SMOOTHING
 // ===============================
 let smoothLandmarks = null;
 const SMOOTH = 0.55;
 
 // ===============================
-// LANDMARKS (LABIOS REALES)
+// LANDMARKS
 // ===============================
 const LIPS_OUTER = [
   61,185,40,39,37,0,267,269,270,409,291,
@@ -51,6 +51,14 @@ async function openCamera() {
   if (running) return;
   running = true;
 
+  console.log("🎥 Cámara ABIERTA → solicitando pausa de Three.js");
+
+  if (window.pauseThree) {
+    window.pauseThree();
+  } else {
+    console.warn("⚠️ pauseThree no existe");
+  }
+
   cameraPopup.classList.add('active');
 
   stream = await navigator.mediaDevices.getUserMedia({
@@ -70,7 +78,11 @@ async function openCamera() {
 }
 
 function closeCamera() {
+  if (!running) return;
   running = false;
+
+  console.log("❌ Cámara CERRADA → reanudando Three.js");
+
   cameraPopup.classList.remove('active');
 
   if (cameraMP) cameraMP.stop();
@@ -86,6 +98,12 @@ function closeCamera() {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (window.resumeThree) {
+    window.resumeThree();
+  } else {
+    console.warn("⚠️ resumeThree no existe");
+  }
 }
 
 // ===============================
@@ -111,14 +129,14 @@ function initFaceMesh() {
       if (running) await faceMesh.send({ image: video });
     },
     width: 480,
-    height: 360 // 🔥 FPS alto
+    height: 360
   });
 
   cameraMP.start();
 }
 
 // ===============================
-// ANDROID ASPECT RATIO FIX
+// ANDROID ASPECT FIX
 // ===============================
 function getAspectFix() {
   const vw = video.videoWidth;
@@ -142,12 +160,11 @@ function getAspectFix() {
 }
 
 // ===============================
-// DRAW LIPS MASK
+// DRAW LIPS
 // ===============================
 function drawLipsMask(landmarks, fix) {
   ctx.beginPath();
 
-  // OUTER
   LIPS_OUTER.forEach((i, idx) => {
     const p = landmarks[i];
     const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
@@ -156,7 +173,6 @@ function drawLipsMask(landmarks, fix) {
   });
   ctx.closePath();
 
-  // INNER (HOLE)
   LIPS_INNER.forEach((i, idx) => {
     const p = landmarks[i];
     const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
@@ -176,7 +192,6 @@ function onResults(results) {
 
   const raw = results.multiFaceLandmarks[0];
 
-  // FAST SMOOTH
   if (!smoothLandmarks) {
     smoothLandmarks = raw.map(p => ({ ...p }));
   } else {
@@ -199,10 +214,8 @@ function onResults(results) {
   ctx.shadowColor = currentLipColor;
   ctx.shadowBlur = lipWidth * 0.06;
 
-  // LABIOS
   drawLipsMask(smoothLandmarks, fix);
 
-  // BOCA ABIERTA → quitar interior
   const mouthOpen =
     Math.abs(smoothLandmarks[13].y - smoothLandmarks[14].y) * canvas.height;
 

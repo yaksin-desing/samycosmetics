@@ -7,22 +7,37 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 // ======================================================
-// 🔴 ADD — CONTROL GLOBAL DE RENDER
+// 🔴 CONTROL GLOBAL DE RENDER (PAUSA REAL)
 // ======================================================
 let threeRunning = true;
 let rafId = null;
 
-// Exponer a window para usar desde la cámara
+// 👉 EXPUESTO PARA TU FILTRO / CÁMARA
 window.pauseThree = () => {
+  if (!threeRunning) return;
+
   threeRunning = false;
-  if (rafId) cancelAnimationFrame(rafId);
+
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  clock.stop();
+  controls.enabled = false;
+
+  console.log("⏸️ Three.js PAUSADO — render detenido");
 };
 
 window.resumeThree = () => {
-  if (!threeRunning) {
-    threeRunning = true;
-    animate();
-  }
+  if (threeRunning) return;
+
+  threeRunning = true;
+  clock.start();
+  controls.enabled = true;
+
+  console.log("▶️ Three.js REANUDADO — render activo");
+  animate();
 };
 
 // ======================================================
@@ -36,10 +51,9 @@ let animationStarted = false;
 const clock = new THREE.Clock(false);
 let mixer = null;
 let cameraGLB = null;
-let animationsEnded = false;
 
 // ======================================================
-// MATERIALES INTERACTIVOS + TRANSICIONES
+// MATERIALES INTERACTIVOS
 // ======================================================
 const materialesInteractivos = {
   contenido: null,
@@ -54,7 +68,7 @@ const colorTargets = {
 const colorLerpSpeed = 0.08;
 
 // ======================================================
-// OCULTAR LOADER
+// LOADER
 // ======================================================
 function hideLoader() {
   const loader = document.getElementById("loading-screen");
@@ -67,9 +81,6 @@ function hideLoader() {
   }, 600);
 }
 
-// ======================================================
-// INICIO CONTROLADO DE LA ANIMACIÓN
-// ======================================================
 function startIfReady() {
   if (animationStarted) return;
   if (glbReady && loaderHidden && firstFrameRenderedAfterReady) {
@@ -100,20 +111,17 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(0, 0, 3);
 
 // ======================================================
-// RENDERER
+// RENDERER (OPTIMIZADO)
 // ======================================================
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha: true,
-  premultipliedAlpha: true,
-  powerPreference: "high-performance",
+  powerPreference: "low-power" // 👈 CLAVE
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.85;
 renderer.outputEncoding = THREE.sRGBEncoding;
 container.appendChild(renderer.domElement);
 
@@ -142,85 +150,60 @@ controls.enableDamping = true;
 // ======================================================
 const loader = new GLTFLoader();
 
-loader.load(
-  "samy.glb",
-  (gltf) => {
-    const model = gltf.scene;
-    scene.add(model);
-    model.position.set(-0.2, -0.2, -0.2);
+loader.load("samy.glb", (gltf) => {
+  const model = gltf.scene;
+  scene.add(model);
+  model.position.set(-0.2, -0.2, -0.2);
 
-    model.traverse((obj) => {
-      if (obj.isCamera) {
-        cameraGLB = obj;
-        controls.enabled = false;
-        cameraGLB.fov = 70;
-        cameraGLB.aspect = window.innerWidth / window.innerHeight;
-        cameraGLB.updateProjectionMatrix();
-        return;
+  model.traverse((obj) => {
+    if (obj.isCamera) {
+      cameraGLB = obj;
+      controls.enabled = false;
+      cameraGLB.fov = 70;
+      cameraGLB.aspect = window.innerWidth / window.innerHeight;
+      cameraGLB.updateProjectionMatrix();
+      return;
+    }
+
+    if (obj.isMesh && obj.material) {
+      const matName = obj.material.name;
+
+      if (matName === "contenido" || matName === "mcontenido") {
+        materialesInteractivos[matName] = obj.material;
+        colorTargets[matName].copy(obj.material.color);
       }
+    }
+  });
 
-      if (obj.isMesh && obj.material) {
-        obj.castShadow = true;
-        obj.receiveShadow = true;
+  mixer = new THREE.AnimationMixer(model);
+  mixer.timeScale = 0;
 
-        const matName = obj.material.name;
+  gltf.animations.forEach((clip) => {
+    const action = mixer.clipAction(clip);
+    action.setLoop(THREE.LoopOnce);
+    action.clampWhenFinished = true;
+    action.play();
+  });
 
-        if (matName === "contenido" || matName === "mcontenido") {
-          materialesInteractivos[matName] = obj.material;
-          colorTargets[matName].copy(obj.material.color);
-        }
-
-        const mat = obj.material;
-        const isGlassLike =
-          mat.transparent ||
-          mat.transmission > 0 ||
-          mat.opacity < 1;
-
-        if (isGlassLike) {
-          mat.depthWrite = false;
-          mat.side = THREE.DoubleSide;
-        } else {
-          obj.layers.enable(1);
-        }
-      }
-    });
-
-    mixer = new THREE.AnimationMixer(model);
-    mixer.timeScale = 0;
-
-    gltf.animations.forEach((clip) => {
-      const action = mixer.clipAction(clip);
-      action.setLoop(THREE.LoopOnce);
-      action.clampWhenFinished = true;
-      action.play();
-    });
-
-    glbReady = true;
-    hideLoader();
-  }
-);
+  glbReady = true;
+  hideLoader();
+});
 
 // ======================================================
-// PARALLAX INPUT
+// PARALLAX
 // ======================================================
 let mouseX = 0;
 let targetMouseX = 0;
-let gyroX = 0;
-let targetGyroX = 0;
 
 window.addEventListener("mousemove", (e) => {
   targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-});
-
-window.addEventListener("deviceorientation", (e) => {
-  targetGyroX = THREE.MathUtils.clamp(-e.gamma / 20, -3, 3);
 });
 
 const lerpFactor = 0.05;
 const cameraTarget = new THREE.Vector3(0, 0.5, 0);
 
 // ======================================================
-// 🟢 MODIFY — ANIMATE LOOP CON PAUSA REAL
+// 🔁 LOOP (CON PAUSA REAL)
 // ======================================================
 function animate() {
   if (!threeRunning) return;
@@ -228,31 +211,16 @@ function animate() {
   rafId = requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
-  if (mixer && clock.running && !animationsEnded) {
+  if (mixer && clock.running) {
     mixer.update(delta);
   }
 
   mouseX += (targetMouseX - mouseX) * lerpFactor;
-  gyroX += (targetGyroX - gyroX) * lerpFactor;
 
   if (cameraGLB) {
-    cameraGLB.position.x = (mouseX + gyroX) * 0.5;
+    cameraGLB.position.x = mouseX * 0.5;
     cameraGLB.lookAt(cameraTarget);
     composer.passes[0].camera = cameraGLB;
-  }
-
-  if (materialesInteractivos.contenido) {
-    materialesInteractivos.contenido.color.lerp(
-      colorTargets.contenido,
-      colorLerpSpeed
-    );
-  }
-
-  if (materialesInteractivos.mcontenido) {
-    materialesInteractivos.mcontenido.color.lerp(
-      colorTargets.mcontenido,
-      colorLerpSpeed
-    );
   }
 
   composer.render();
@@ -266,7 +234,7 @@ function animate() {
 animate();
 
 // ======================================================
-// EVENTO DESDE EL CARRUSEL
+// COLOR DESDE CARRUSEL
 // ======================================================
 window.addEventListener("carouselColorChange", (e) => {
   const baseColor = new THREE.Color(e.detail.color);

@@ -7,6 +7,25 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 
 // ======================================================
+// 🔴 ADD — CONTROL GLOBAL DE RENDER
+// ======================================================
+let threeRunning = true;
+let rafId = null;
+
+// Exponer a window para usar desde la cámara
+window.pauseThree = () => {
+  threeRunning = false;
+  if (rafId) cancelAnimationFrame(rafId);
+};
+
+window.resumeThree = () => {
+  if (!threeRunning) {
+    threeRunning = true;
+    animate();
+  }
+};
+
+// ======================================================
 // ESTADOS DE CARGA / CONTROL
 // ======================================================
 let glbReady = false;
@@ -201,10 +220,12 @@ const lerpFactor = 0.05;
 const cameraTarget = new THREE.Vector3(0, 0.5, 0);
 
 // ======================================================
-// ANIMATE LOOP
+// 🟢 MODIFY — ANIMATE LOOP CON PAUSA REAL
 // ======================================================
 function animate() {
-  requestAnimationFrame(animate);
+  if (!threeRunning) return;
+
+  rafId = requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
   if (mixer && clock.running && !animationsEnded) {
@@ -220,7 +241,6 @@ function animate() {
     composer.passes[0].camera = cameraGLB;
   }
 
-  // 🔥 TRANSICIÓN SUAVE DE COLORES
   if (materialesInteractivos.contenido) {
     materialesInteractivos.contenido.color.lerp(
       colorTargets.contenido,

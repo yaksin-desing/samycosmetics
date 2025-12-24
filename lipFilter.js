@@ -12,38 +12,40 @@ const ctx = canvas.getContext('2d');
 let stream = null;
 let faceMesh = null;
 let cameraMP = null;
+let running = false;
 
-// Color desde carrusel
-let currentLipColor = 'rgba(200,0,80,0.6)';
+let currentLipColor = 'rgba(200,0,80,0.65)';
 
 // ===============================
-// MEDIAPIPE INDICES OFICIALES
+// LANDMARKS
 // ===============================
-
-// Contorno externo completo de labios (UNA SOLA MALLA)
 const LIPS_OUTER = [
   61,185,40,39,37,0,267,269,270,409,291,
-  375,321,405,314,17,84,181,91,146,61
+  375,321,405,314,17,84,181,91,146
 ];
 
-// Boca interna (dientes + lengua)
-const MOUTH_INNER = [
+const LIPS_INNER = [
   78,95,88,178,87,14,
   317,402,318,324,308
 ];
 
+const MOUTH_HOLE = [
+  13,312,311,310,415,308,
+  324,318,402,317,14,87,
+  178,88,95,78
+];
+
 // ===============================
-// OPEN CAMERA
+// CAMERA CONTROL
 // ===============================
 async function openCamera() {
+  if (running) return;
+  running = true;
+
   cameraPopup.classList.add('active');
 
   stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: 'user',
-      width: { ideal: 720 },
-      height: { ideal: 1280 }
-    },
+    video: { facingMode: 'user' },
     audio: false
   });
 
@@ -54,16 +56,15 @@ async function openCamera() {
   initFaceMesh();
 }
 
-// ===============================
-// CLOSE CAMERA
-// ===============================
 function closeCamera() {
+  running = false;
   cameraPopup.classList.remove('active');
 
-  if (cameraMP) {
-    cameraMP.stop();
-    cameraMP = null;
-  }
+  if (cameraMP) cameraMP.stop();
+  if (faceMesh) faceMesh.close();
+
+  cameraMP = null;
+  faceMesh = null;
 
   if (stream) {
     stream.getTracks().forEach(t => t.stop());
@@ -74,12 +75,12 @@ function closeCamera() {
 }
 
 // ===============================
-// MEDIAPIPE INIT (OPTIMIZED)
+// MEDIAPIPE
 // ===============================
 function initFaceMesh() {
   faceMesh = new FaceMesh({
-    locateFile: file =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    locateFile: f =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
   });
 
   faceMesh.setOptions({
@@ -93,17 +94,17 @@ function initFaceMesh() {
 
   cameraMP = new Camera(video, {
     onFrame: async () => {
-      await faceMesh.send({ image: video });
+      if (running) await faceMesh.send({ image: video });
     },
-    width: 480,
-    height: 360
+    width: 640,
+    height: 480
   });
 
   cameraMP.start();
 }
 
 // ===============================
-// DRAW PATH
+// DRAW HELPERS
 // ===============================
 function drawPath(indices, landmarks) {
   ctx.beginPath();
@@ -118,7 +119,7 @@ function drawPath(indices, landmarks) {
 }
 
 // ===============================
-// ON RESULTS (FINAL LOGIC)
+// RESULTS
 // ===============================
 function onResults(results) {
   if (!results.multiFaceLandmarks?.length) return;
@@ -126,21 +127,24 @@ function onResults(results) {
   const landmarks = results.multiFaceLandmarks[0];
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
   ctx.save();
 
-  // 🎨 1. Pintar labios completos
-  ctx.globalCompositeOperation = 'source-over';
+  // 1️⃣ Pintar labio completo
   ctx.fillStyle = currentLipColor;
   ctx.globalAlpha = 0.65;
-
   ctx.shadowColor = currentLipColor;
-  ctx.shadowBlur = 8;
+  ctx.shadowBlur = 6;
 
   drawPath(LIPS_OUTER, landmarks);
 
-  // ✂️ 2. Quitar boca interna (dientes + lengua)
+  // 2️⃣ Quitar interior del labio
   ctx.globalCompositeOperation = 'destination-out';
-  drawPath(MOUTH_INNER, landmarks);
+  drawPath(LIPS_INNER, landmarks);
+
+  // 3️⃣ Quitar boca abierta (DIENTES + ENCÍAS)
+  drawPath(MOUTH_HOLE, landmarks);
 
   ctx.restore();
 }
@@ -153,12 +157,10 @@ function resizeCanvas() {
   canvas.height = video.videoHeight;
 }
 
-window.addEventListener('resize', resizeCanvas);
-
 // ===============================
 // COLOR FROM CAROUSEL
 // ===============================
-window.addEventListener('carouselColorChange', (e) => {
+window.addEventListener('carouselColorChange', e => {
   const rgb = e.detail.color.match(/\d+/g);
   if (!rgb) return;
   currentLipColor = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.65)`;
@@ -169,3 +171,4 @@ window.addEventListener('carouselColorChange', (e) => {
 // ===============================
 openBtn.addEventListener('click', openCamera);
 closeBtn.addEventListener('click', closeCamera);
+window.addEventListener('resize', resizeCanvas);

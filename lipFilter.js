@@ -17,35 +17,29 @@ let running = false;
 // ===============================
 // COLOR STATE
 // ===============================
-let currentLipColor = 'rgba(200,0,80,0.6)';
+let currentLipColor = 'rgba(200,0,80,0.55)';
 
 // ===============================
-// SMOOTHING (ANTI-JITTER)
+// SMOOTHING (FAST & RESPONSIVE)
 // ===============================
 let smoothLandmarks = null;
-const SMOOTHING = 0.75;
+const SMOOTH = 0.6;
 
 // ===============================
-// LANDMARKS (OFICIALES)
+// LIP LANDMARKS (PRECISOS)
 // ===============================
 
-// Contorno EXTERNO completo del labio
+// Contorno externo completo
 const LIPS_OUTER = [
   61,185,40,39,37,0,267,269,270,409,291,
   375,321,405,314,17,84,181,91,146
 ];
 
-// Contorno INTERNO del labio (para vaciar)
+// Contorno interno REAL (excluye dientes)
 const LIPS_INNER = [
-  78,95,88,178,87,14,
-  317,402,318,324,308
-];
-
-// Hueco de la boca (cuando se abre)
-const MOUTH_HOLE = [
-  13,312,311,310,415,308,
-  324,318,402,317,14,87,
-  178,88,95,78
+  78,191,80,81,82,13,
+  312,311,310,415,308,
+  324,318,402,317,14,87
 ];
 
 // ===============================
@@ -106,31 +100,42 @@ function initFaceMesh() {
 
   faceMesh.onResults(onResults);
 
-  // ⚡ Tracking ligero (fluido)
   cameraMP = new Camera(video, {
     onFrame: async () => {
       if (running) await faceMesh.send({ image: video });
     },
-    width: 480,
-    height: 360
+    width: 640,
+    height: 480
   });
 
   cameraMP.start();
 }
 
 // ===============================
-// DRAW HELPERS
+// DRAW LIPS (EVEN-ODD MASK)
 // ===============================
-function drawPath(indices, landmarks) {
+function drawLipsMask(landmarks) {
   ctx.beginPath();
-  indices.forEach((i, idx) => {
+
+  // Outer
+  LIPS_OUTER.forEach((i, idx) => {
     const p = landmarks[i];
     const x = p.x * canvas.width;
     const y = p.y * canvas.height;
     idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
   ctx.closePath();
-  ctx.fill();
+
+  // Inner (hole)
+  LIPS_INNER.forEach((i, idx) => {
+    const p = landmarks[i];
+    const x = p.x * canvas.width;
+    const y = p.y * canvas.height;
+    idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+
+  ctx.fill('evenodd');
 }
 
 // ===============================
@@ -141,56 +146,29 @@ function onResults(results) {
 
   const raw = results.multiFaceLandmarks[0];
 
-  // 🔥 SMOOTHING
+  // FAST SMOOTH
   if (!smoothLandmarks) {
     smoothLandmarks = raw.map(p => ({ ...p }));
   } else {
     raw.forEach((p, i) => {
-      smoothLandmarks[i].x += (p.x - smoothLandmarks[i].x) * (1 - SMOOTHING);
-      smoothLandmarks[i].y += (p.y - smoothLandmarks[i].y) * (1 - SMOOTHING);
+      smoothLandmarks[i].x += (p.x - smoothLandmarks[i].x) * (1 - SMOOTH);
+      smoothLandmarks[i].y += (p.y - smoothLandmarks[i].y) * (1 - SMOOTH);
     });
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.save();
-
-  // ===============================
-  // LIP WIDTH (ADAPTIVE MOBILE)
-  // ===============================
+  // Adaptive softness
   const lipWidth =
-    Math.abs(
-      smoothLandmarks[61].x -
-      smoothLandmarks[291].x
-    ) * canvas.width;
+    Math.abs(smoothLandmarks[61].x - smoothLandmarks[291].x) * canvas.width;
 
-  // ===============================
-  // BASE LIP COLOR
-  // ===============================
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 0.55;
+  ctx.save();
   ctx.fillStyle = currentLipColor;
+  ctx.globalAlpha = 0.9;
   ctx.shadowColor = currentLipColor;
-  ctx.shadowBlur = lipWidth * 0.12;
+  ctx.shadowBlur = lipWidth * 0.08;
 
-  // 1️⃣ Pintar labio completo
-  drawPath(LIPS_OUTER, smoothLandmarks);
-
-  // 2️⃣ Quitar interior del labio (no dientes)
-  ctx.globalCompositeOperation = 'destination-out';
-  drawPath(LIPS_INNER, smoothLandmarks);
-
-  // 3️⃣ Quitar boca abierta (lengua + dientes)
-  drawPath(MOUTH_HOLE, smoothLandmarks);
-
-  // ===============================
-  // SOFT EDGE PASS (REALISMO)
-  // ===============================
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = 0.15;
-  ctx.shadowBlur = lipWidth * 0.25;
-  drawPath(LIPS_OUTER, smoothLandmarks);
-
+  drawLipsMask(smoothLandmarks);
   ctx.restore();
 }
 
@@ -208,7 +186,7 @@ function resizeCanvas() {
 window.addEventListener('carouselColorChange', e => {
   const rgb = e.detail.color.match(/\d+/g);
   if (!rgb) return;
-  currentLipColor = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.6)`;
+  currentLipColor = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},0.55)`;
 });
 
 // ===============================

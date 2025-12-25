@@ -51,13 +51,7 @@ async function openCamera() {
   if (running) return;
   running = true;
 
-  console.log("🎥 Cámara ABIERTA → solicitando pausa de Three.js");
-
-  if (window.pauseThree) {
-    window.pauseThree();
-  } else {
-    console.warn("⚠️ pauseThree no existe");
-  }
+  if (window.pauseThree) window.pauseThree();
 
   cameraPopup.classList.add('active');
 
@@ -81,8 +75,6 @@ function closeCamera() {
   if (!running) return;
   running = false;
 
-  console.log("❌ Cámara CERRADA → reanudando Three.js");
-
   cameraPopup.classList.remove('active');
 
   if (cameraMP) cameraMP.stop();
@@ -99,11 +91,7 @@ function closeCamera() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (window.resumeThree) {
-    window.resumeThree();
-  } else {
-    console.warn("⚠️ resumeThree no existe");
-  }
+  if (window.resumeThree) window.resumeThree();
 }
 
 // ===============================
@@ -260,33 +248,32 @@ window.addEventListener('carouselColorChange', e => {
 openBtn.addEventListener('click', openCamera);
 closeBtn.addEventListener('click', closeCamera);
 
-
 // ===============================
-// CAPTURE PHOTO
+// CAPTURE PHOTO (FIX REAL)
 // ===============================
 const captureBtn = document.getElementById('capture-photo');
-
 captureBtn.addEventListener('click', capturePhoto);
 
 function capturePhoto() {
   if (!video.videoWidth || !video.videoHeight) return;
 
-  // Canvas final
   const output = document.createElement('canvas');
   output.width = video.videoWidth;
   output.height = video.videoHeight;
 
   const octx = output.getContext('2d');
 
-  // 1️⃣ Frame del video
+  // 1️⃣ Video
   octx.drawImage(video, 0, 0, output.width, output.height);
 
-  // 2️⃣ Labios (canvas overlay)
-  octx.drawImage(canvas, 0, 0, output.width, output.height);
+  // 2️⃣ Overlay SIN deformar proporción
+  octx.drawImage(
+    canvas,
+    0, 0, canvas.width, canvas.height,
+    0, 0, output.width, output.height
+  );
 
-  // 3️⃣ Exportar imagen
   const image = output.toDataURL('image/png');
-
   downloadImage(image);
 }
 

@@ -325,9 +325,9 @@ button {
 }
 
 #camera-canvas {
-  pointer-events: none;
+  position: absolute;
+  inset: 0;
 }
-
 
 /* ===========================
    CAPTURE BUTTON

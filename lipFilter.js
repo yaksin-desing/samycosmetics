@@ -20,7 +20,6 @@ let running = false;
 
 let currentLipColor = 'rgba(200,0,80,0.55)';
 let smoothLandmarks = null;
-let lastFrameImage = null;
 
 // ===============================
 // CONFIG
@@ -59,11 +58,7 @@ async function openCamera() {
   cameraPopup.classList.add('active');
 
   stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: 'user',
-      width: { ideal: 720 },
-      height: { ideal: 1280 }
-    },
+    video: { facingMode: 'user' },
     audio: false
   });
 
@@ -88,7 +83,6 @@ function closeCamera() {
   cameraMP = null;
   faceMesh = null;
   smoothLandmarks = null;
-  lastFrameImage = null;
 
   stream?.getTracks().forEach(t => t.stop());
   stream = null;
@@ -116,16 +110,36 @@ function initFaceMesh() {
   faceMesh.onResults(onResults);
 
   cameraMP = new Camera(video, {
-    onFrame: async () => running && faceMesh.send({ image: video }),
-    width: 480,
-    height: 360
+    onFrame: async () => running && faceMesh.send({ image: video })
   });
 
   cameraMP.start();
 }
 
 // ===============================
-// ASPECT FIX (ANDROID SAFE)
+// COVER DRAW (CLAVE)
+// ===============================
+function drawCover(video, ctx, width, height) {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const vr = vw / vh;
+  const cr = width / height;
+
+  let sx = 0, sy = 0, sw = vw, sh = vh;
+
+  if (vr > cr) {
+    sw = vh * cr;
+    sx = (vw - sw) / 2;
+  } else {
+    sh = vw / cr;
+    sy = (vh - sh) / 2;
+  }
+
+  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, width, height);
+}
+
+// ===============================
+// ASPECT FIX (LANDMARKS)
 // ===============================
 function getAspectFix() {
   const vw = video.videoWidth;
@@ -217,9 +231,6 @@ function onResults(results) {
   }
 
   ctx.restore();
-
-  // 🔒 Guardar último frame correcto
-  lastFrameImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 // ===============================
@@ -241,26 +252,22 @@ window.addEventListener('carouselColorChange', e => {
 });
 
 // ===============================
-// CAPTURE (FIX REAL)
+// CAPTURE (FIX DEFINITIVO)
 // ===============================
 captureBtn.addEventListener('click', () => {
-  if (!lastFrameImage) return;
+  if (!video.videoWidth) return;
 
   const output = document.createElement('canvas');
-  output.width = video.videoWidth;
-  output.height = video.videoHeight;
+  output.width = canvas.width;
+  output.height = canvas.height;
+
   const octx = output.getContext('2d');
 
-  // Video
-  octx.drawImage(video, 0, 0, output.width, output.height);
+  // VIDEO → cover EXACTO
+  drawCover(video, octx, output.width, output.height);
 
-  // Overlay EXACTO
-  const temp = document.createElement('canvas');
-  temp.width = canvas.width;
-  temp.height = canvas.height;
-  temp.getContext('2d').putImageData(lastFrameImage, 0, 0);
-
-  octx.drawImage(temp, 0, 0, output.width, output.height);
+  // FILTRO → 1:1
+  octx.drawImage(canvas, 0, 0);
 
   downloadImage(output.toDataURL('image/png'));
 });

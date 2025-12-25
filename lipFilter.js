@@ -4,6 +4,7 @@
 const cameraPopup = document.getElementById('camera-popup');
 const openBtn = document.getElementById('try-lips-btn');
 const closeBtn = document.getElementById('close-camera');
+const captureBtn = document.getElementById('capture-photo');
 
 const video = document.getElementById('camera-video');
 const canvas = document.getElementById('camera-canvas');
@@ -18,11 +19,12 @@ let cameraMP = null;
 let running = false;
 
 let currentLipColor = 'rgba(200,0,80,0.55)';
+let smoothLandmarks = null;
+let lastFrameImage = null;
 
 // ===============================
-// SMOOTHING
+// CONFIG
 // ===============================
-let smoothLandmarks = null;
 const SMOOTH = 0.55;
 
 // ===============================
@@ -51,7 +53,8 @@ async function openCamera() {
   if (running) return;
   running = true;
 
-  if (window.pauseThree) window.pauseThree();
+  console.log('[CAMERA] OPEN');
+  window.pauseThree?.();
 
   cameraPopup.classList.add('active');
 
@@ -75,23 +78,23 @@ function closeCamera() {
   if (!running) return;
   running = false;
 
+  console.log('[CAMERA] CLOSE');
+
   cameraPopup.classList.remove('active');
 
-  if (cameraMP) cameraMP.stop();
-  if (faceMesh) faceMesh.close();
+  cameraMP?.stop();
+  faceMesh?.close();
 
   cameraMP = null;
   faceMesh = null;
   smoothLandmarks = null;
+  lastFrameImage = null;
 
-  if (stream) {
-    stream.getTracks().forEach(t => t.stop());
-    stream = null;
-  }
+  stream?.getTracks().forEach(t => t.stop());
+  stream = null;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  if (window.resumeThree) window.resumeThree();
+  window.resumeThree?.();
 }
 
 // ===============================
@@ -113,9 +116,7 @@ function initFaceMesh() {
   faceMesh.onResults(onResults);
 
   cameraMP = new Camera(video, {
-    onFrame: async () => {
-      if (running) await faceMesh.send({ image: video });
-    },
+    onFrame: async () => running && faceMesh.send({ image: video }),
     width: 480,
     height: 360
   });
@@ -124,15 +125,13 @@ function initFaceMesh() {
 }
 
 // ===============================
-// ANDROID ASPECT FIX
+// ASPECT FIX (ANDROID SAFE)
 // ===============================
 function getAspectFix() {
   const vw = video.videoWidth;
   const vh = video.videoHeight;
   const cw = canvas.width;
   const ch = canvas.height;
-
-  if (!vw || !vh) return { scaleX: 1, offsetX: 0 };
 
   const videoAR = vw / vh;
   const canvasAR = cw / ch;
@@ -142,9 +141,7 @@ function getAspectFix() {
   }
 
   const scaleX = videoAR / canvasAR;
-  const offsetX = (1 - scaleX) / 2;
-
-  return { scaleX, offsetX };
+  return { scaleX, offsetX: (1 - scaleX) / 2 };
 }
 
 // ===============================
@@ -190,7 +187,6 @@ function onResults(results) {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   const fix = getAspectFix();
 
   const lipWidth =
@@ -221,6 +217,9 @@ function onResults(results) {
   }
 
   ctx.restore();
+
+  // 🔒 Guardar último frame correcto
+  lastFrameImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
 // ===============================
@@ -230,11 +229,10 @@ function resizeCanvas() {
   canvas.width = video.videoWidth || 640;
   canvas.height = video.videoHeight || 480;
 }
-
 window.addEventListener('resize', resizeCanvas);
 
 // ===============================
-// COLOR FROM CAROUSEL
+// COLOR
 // ===============================
 window.addEventListener('carouselColorChange', e => {
   const rgb = e.detail.color.match(/\d+/g);
@@ -243,48 +241,44 @@ window.addEventListener('carouselColorChange', e => {
 });
 
 // ===============================
-// EVENTS
+// CAPTURE (FIX REAL)
 // ===============================
-openBtn.addEventListener('click', openCamera);
-closeBtn.addEventListener('click', closeCamera);
-
-// ===============================
-// CAPTURE PHOTO (FIX REAL)
-// ===============================
-const captureBtn = document.getElementById('capture-photo');
-captureBtn.addEventListener('click', capturePhoto);
-
-function capturePhoto() {
-  if (!video.videoWidth || !video.videoHeight) return;
+captureBtn.addEventListener('click', () => {
+  if (!lastFrameImage) return;
 
   const output = document.createElement('canvas');
   output.width = video.videoWidth;
   output.height = video.videoHeight;
-
   const octx = output.getContext('2d');
 
-  // 1️⃣ Video
+  // Video
   octx.drawImage(video, 0, 0, output.width, output.height);
 
-  // 2️⃣ Overlay SIN deformar proporción
-  octx.drawImage(
-    canvas,
-    0, 0, canvas.width, canvas.height,
-    0, 0, output.width, output.height
-  );
+  // Overlay EXACTO
+  const temp = document.createElement('canvas');
+  temp.width = canvas.width;
+  temp.height = canvas.height;
+  temp.getContext('2d').putImageData(lastFrameImage, 0, 0);
 
-  const image = output.toDataURL('image/png');
-  downloadImage(image);
-}
+  octx.drawImage(temp, 0, 0, output.width, output.height);
+
+  downloadImage(output.toDataURL('image/png'));
+});
 
 // ===============================
-// DOWNLOAD IMAGE
+// DOWNLOAD
 // ===============================
 function downloadImage(dataUrl) {
-  const link = document.createElement('a');
-  link.href = dataUrl;
-  link.download = 'lip-filter.png';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = 'lip-filter.png';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
+
+// ===============================
+// EVENTS
+// ===============================
+openBtn.addEventListener('click', openCamera);
+closeBtn.addEventListener('click', closeCamera);

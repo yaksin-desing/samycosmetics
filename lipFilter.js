@@ -259,3 +259,45 @@ window.addEventListener('carouselColorChange', e => {
 // ===============================
 openBtn.addEventListener('click', openCamera);
 closeBtn.addEventListener('click', closeCamera);
+
+
+// ===============================
+// CAPTURE PHOTO
+// ===============================
+const captureBtn = document.getElementById('capture-photo');
+
+captureBtn.addEventListener('click', capturePhoto);
+
+function capturePhoto() {
+  if (!video.videoWidth || !video.videoHeight) return;
+
+  // Canvas final
+  const output = document.createElement('canvas');
+  output.width = video.videoWidth;
+  output.height = video.videoHeight;
+
+  const octx = output.getContext('2d');
+
+  // 1️⃣ Frame del video
+  octx.drawImage(video, 0, 0, output.width, output.height);
+
+  // 2️⃣ Labios (canvas overlay)
+  octx.drawImage(canvas, 0, 0, output.width, output.height);
+
+  // 3️⃣ Exportar imagen
+  const image = output.toDataURL('image/png');
+
+  downloadImage(image);
+}
+
+// ===============================
+// DOWNLOAD IMAGE
+// ===============================
+function downloadImage(dataUrl) {
+  const link = document.createElement('a');
+  link.href = dataUrl;
+  link.download = 'lip-filter.png';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}

@@ -21,6 +21,10 @@ let running = false;
 let currentLipColor = 'rgba(200,0,80,0.55)';
 let smoothLandmarks = null;
 
+// UX
+let detectingFace = true;
+let guidePhase = 0;
+
 // ===============================
 // CONFIG
 // ===============================
@@ -52,9 +56,7 @@ async function openCamera() {
   if (running) return;
   running = true;
 
-  console.log('[CAMERA] OPEN');
   window.pauseThree?.();
-
   cameraPopup.classList.add('active');
 
   stream = await navigator.mediaDevices.getUserMedia({
@@ -67,13 +69,11 @@ async function openCamera() {
 
   resizeCanvas();
   initFaceMesh();
+  guideLoop();
 }
 
 function closeCamera() {
-  if (!running) return;
   running = false;
-
-  console.log('[CAMERA] CLOSE');
 
   cameraPopup.classList.remove('active');
 
@@ -83,6 +83,7 @@ function closeCamera() {
   cameraMP = null;
   faceMesh = null;
   smoothLandmarks = null;
+  detectingFace = true;
 
   stream?.getTracks().forEach(t => t.stop());
   stream = null;
@@ -117,29 +118,7 @@ function initFaceMesh() {
 }
 
 // ===============================
-// COVER DRAW (CLAVE)
-// ===============================
-function drawCover(video, ctx, width, height) {
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
-  const vr = vw / vh;
-  const cr = width / height;
-
-  let sx = 0, sy = 0, sw = vw, sh = vh;
-
-  if (vr > cr) {
-    sw = vh * cr;
-    sx = (vw - sw) / 2;
-  } else {
-    sh = vw / cr;
-    sy = (vh - sh) / 2;
-  }
-
-  ctx.drawImage(video, sx, sy, sw, sh, 0, 0, width, height);
-}
-
-// ===============================
-// ASPECT FIX (LANDMARKS)
+// ASPECT FIX
 // ===============================
 function getAspectFix() {
   const vw = video.videoWidth;
@@ -156,6 +135,50 @@ function getAspectFix() {
 
   const scaleX = videoAR / canvasAR;
   return { scaleX, offsetX: (1 - scaleX) / 2 };
+}
+
+// ===============================
+// FACE GUIDE (UX)
+// ===============================
+function drawFaceGuide() {
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([14, 10]);
+
+  guidePhase += 0.6;
+  ctx.lineDashOffset = -guidePhase;
+
+  ctx.beginPath();
+  ctx.ellipse(
+    w / 2,
+    h / 2,
+    w * 0.22,
+    h * 0.32,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+  ctx.font = '16px system-ui';
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.textAlign = 'center';
+  ctx.fillText('Detectando rostro…', w / 2, h * 0.75);
+
+  ctx.restore();
+}
+
+function guideLoop() {
+  if (!running) return;
+  if (detectingFace) drawFaceGuide();
+  requestAnimationFrame(guideLoop);
 }
 
 // ===============================
@@ -187,7 +210,12 @@ function drawLipsMask(landmarks, fix) {
 // RESULTS
 // ===============================
 function onResults(results) {
-  if (!results.multiFaceLandmarks?.length) return;
+  if (!results.multiFaceLandmarks?.length) {
+    detectingFace = true;
+    return;
+  }
+
+  detectingFace = false;
 
   const raw = results.multiFaceLandmarks[0];
 
@@ -207,10 +235,13 @@ function onResults(results) {
     Math.abs(smoothLandmarks[61].x - smoothLandmarks[291].x) * canvas.width;
 
   ctx.save();
+
+  // 💄 LABIAL REALISTA (NO TOCA DIENTES)
+  ctx.globalCompositeOperation = 'multiply';
   ctx.fillStyle = currentLipColor;
-  ctx.globalAlpha = 0.85;
+  ctx.globalAlpha = 0.45;
   ctx.shadowColor = currentLipColor;
-  ctx.shadowBlur = lipWidth * 0.06;
+  ctx.shadowBlur = lipWidth * 0.03;
 
   drawLipsMask(smoothLandmarks, fix);
 
@@ -252,21 +283,15 @@ window.addEventListener('carouselColorChange', e => {
 });
 
 // ===============================
-// CAPTURE (FIX DEFINITIVO)
+// CAPTURE
 // ===============================
 captureBtn.addEventListener('click', () => {
-  if (!video.videoWidth) return;
-
   const output = document.createElement('canvas');
   output.width = canvas.width;
   output.height = canvas.height;
 
   const octx = output.getContext('2d');
-
-  // VIDEO → cover EXACTO
-  drawCover(video, octx, output.width, output.height);
-
-  // FILTRO → 1:1
+  octx.drawImage(video, 0, 0, output.width, output.height);
   octx.drawImage(canvas, 0, 0);
 
   downloadImage(output.toDataURL('image/png'));
@@ -278,7 +303,7 @@ captureBtn.addEventListener('click', () => {
 function downloadImage(dataUrl) {
   const a = document.createElement('a');
   a.href = dataUrl;
-  a.download = 'lip-filter.png';
+  a.download = 'labialsamy.png';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

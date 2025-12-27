@@ -3,8 +3,8 @@
 // ===============================
 const cameraPopup = document.getElementById('camera-popup');
 const openBtn = document.getElementById('try-lips-btn');
-const closeBtn = document.getElementById('close-camera');
 const captureBtn = document.getElementById('capture-photo');
+const backBtn = document.getElementById('back-camera');
 
 const video = document.getElementById('camera-video');
 const canvas = document.getElementById('camera-canvas');
@@ -24,6 +24,7 @@ let smoothLandmarks = null;
 // UX
 let detectingFace = true;
 let guidePhase = 0;
+let guideRAF = null;
 
 // ===============================
 // CONFIG
@@ -73,20 +74,30 @@ async function openCamera() {
 }
 
 function closeCamera() {
+  if (!running) return;
   running = false;
 
   cameraPopup.classList.remove('active');
 
-  cameraMP?.stop();
-  faceMesh?.close();
+  if (guideRAF) {
+    cancelAnimationFrame(guideRAF);
+    guideRAF = null;
+  }
+
+  try {
+    cameraMP?.stop();
+    faceMesh?.close();
+  } catch {}
 
   cameraMP = null;
   faceMesh = null;
   smoothLandmarks = null;
   detectingFace = true;
 
-  stream?.getTracks().forEach(t => t.stop());
-  stream = null;
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   window.resumeThree?.();
@@ -118,35 +129,15 @@ function initFaceMesh() {
 }
 
 // ===============================
-// ASPECT FIX
-// ===============================
-function getAspectFix() {
-  const vw = video.videoWidth;
-  const vh = video.videoHeight;
-  const cw = canvas.width;
-  const ch = canvas.height;
-
-  const videoAR = vw / vh;
-  const canvasAR = cw / ch;
-
-  if (Math.abs(videoAR - canvasAR) < 0.01) {
-    return { scaleX: 1, offsetX: 0 };
-  }
-
-  const scaleX = videoAR / canvasAR;
-  return { scaleX, offsetX: (1 - scaleX) / 2 };
-}
-
-// ===============================
-// FACE GUIDE (UX)
+// FACE GUIDE (OVALO)
 // ===============================
 function drawFaceGuide() {
   const w = canvas.width;
   const h = canvas.height;
 
   ctx.clearRect(0, 0, w, h);
-
   ctx.save();
+
   ctx.strokeStyle = 'rgba(255,255,255,0.65)';
   ctx.lineWidth = 3;
   ctx.setLineDash([14, 10]);
@@ -155,15 +146,7 @@ function drawFaceGuide() {
   ctx.lineDashOffset = -guidePhase;
 
   ctx.beginPath();
-  ctx.ellipse(
-    w / 2,
-    h / 2,
-    w * 0.22,
-    h * 0.32,
-    0,
-    0,
-    Math.PI * 2
-  );
+  ctx.ellipse(w / 2, h / 2, w * 0.22, h * 0.32, 0, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.setLineDash([]);
@@ -178,18 +161,18 @@ function drawFaceGuide() {
 function guideLoop() {
   if (!running) return;
   if (detectingFace) drawFaceGuide();
-  requestAnimationFrame(guideLoop);
+  guideRAF = requestAnimationFrame(guideLoop);
 }
 
 // ===============================
 // DRAW LIPS
 // ===============================
-function drawLipsMask(landmarks, fix) {
+function drawLipsMask(landmarks) {
   ctx.beginPath();
 
   LIPS_OUTER.forEach((i, idx) => {
     const p = landmarks[i];
-    const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
+    const x = p.x * canvas.width;
     const y = p.y * canvas.height;
     idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
@@ -197,7 +180,7 @@ function drawLipsMask(landmarks, fix) {
 
   LIPS_INNER.forEach((i, idx) => {
     const p = landmarks[i];
-    const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
+    const x = p.x * canvas.width;
     const y = p.y * canvas.height;
     idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   });
@@ -216,7 +199,6 @@ function onResults(results) {
   }
 
   detectingFace = false;
-
   const raw = results.multiFaceLandmarks[0];
 
   if (!smoothLandmarks) {
@@ -229,38 +211,13 @@ function onResults(results) {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const fix = getAspectFix();
-
-  const lipWidth =
-    Math.abs(smoothLandmarks[61].x - smoothLandmarks[291].x) * canvas.width;
 
   ctx.save();
-
-  // 💄 LABIAL REALISTA (NO TOCA DIENTES)
   ctx.globalCompositeOperation = 'multiply';
   ctx.fillStyle = currentLipColor;
   ctx.globalAlpha = 0.45;
-  ctx.shadowColor = currentLipColor;
-  ctx.shadowBlur = lipWidth * 0.03;
 
-  drawLipsMask(smoothLandmarks, fix);
-
-  const mouthOpen =
-    Math.abs(smoothLandmarks[13].y - smoothLandmarks[14].y) * canvas.height;
-
-  if (mouthOpen > lipWidth * 0.08) {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    MOUTH_OPENING.forEach((i, idx) => {
-      const p = smoothLandmarks[i];
-      const x = (p.x * fix.scaleX + fix.offsetX) * canvas.width;
-      const y = p.y * canvas.height;
-      idx === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-    ctx.fill();
-  }
-
+  drawLipsMask(smoothLandmarks);
   ctx.restore();
 }
 
@@ -291,26 +248,17 @@ captureBtn.addEventListener('click', () => {
   output.height = canvas.height;
 
   const octx = output.getContext('2d');
-  octx.drawImage(video, 0, 0, output.width, output.height);
+  octx.drawImage(video, 0, 0);
   octx.drawImage(canvas, 0, 0);
 
-  downloadImage(output.toDataURL('image/png'));
-});
-
-// ===============================
-// DOWNLOAD
-// ===============================
-function downloadImage(dataUrl) {
   const a = document.createElement('a');
-  a.href = dataUrl;
+  a.href = output.toDataURL('image/png');
   a.download = 'labialsamy.png';
-  document.body.appendChild(a);
   a.click();
-  document.body.removeChild(a);
-}
+});
 
 // ===============================
 // EVENTS
 // ===============================
 openBtn.addEventListener('click', openCamera);
-closeBtn.addEventListener('click', closeCamera);
+backBtn.addEventListener('click', closeCamera);

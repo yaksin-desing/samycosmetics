@@ -253,7 +253,7 @@ captureBtn.addEventListener('click', () => {
 
   const a = document.createElement('a');
   a.href = output.toDataURL('image/png');
-  a.download = 'labialsamy.png';
+  a.download = 'Test_labial_samy.png';
   a.click();
 });
 

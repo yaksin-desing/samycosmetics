@@ -102,14 +102,23 @@
 
 
       <div class="camera-container">
+        <div class="marco">
+          <div class="columnas_marco">
+            <div class="col_marco_top">
+              <img src="logo.svg" alt="logo">
+            </div>
+            <div class="col_marco_left"></div>
+            <div class="col_marco_riht"></div>
+          </div>
+          <div class="base_marco">
+            <div class="nav_camara">
+              <button id="back-camera" class="capture-btn back-btn"><img src="boton_back.svg" alt=""></button>
+              <button id="capture-photo" class="capture-btn"><img src="boton_capt.svg" alt=""></button>
+            </div>
+          </div>
+        </div>
         <video id="camera-video" autoplay playsinline muted></video>
         <canvas id="camera-canvas"></canvas>
-        <div class="nav_camara">
-          <button id="back-camera" class="capture-btn back-btn">↩</button>
-          <button id="capture-photo" class="capture-btn">📸</button>
-          
-        </div>
-
       </div>
 
     </div>

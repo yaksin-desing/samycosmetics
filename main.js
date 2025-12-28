@@ -133,9 +133,9 @@ composer.addPass(new RenderPass(scene, camera));
 
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.05,
+  0.2,
   0.1,
-  0.1
+  0.2
 );
 composer.addPass(bloomPass);
 
@@ -222,6 +222,23 @@ function animate() {
     cameraGLB.lookAt(cameraTarget);
     composer.passes[0].camera = cameraGLB;
   }
+
+  // ===============================
+// COLOR LERP (🔥 ESTO FALTABA)
+// ===============================
+if (materialesInteractivos.contenido) {
+  materialesInteractivos.contenido.color.lerp(
+    colorTargets.contenido,
+    colorLerpSpeed
+  );
+}
+
+if (materialesInteractivos.mcontenido) {
+  materialesInteractivos.mcontenido.color.lerp(
+    colorTargets.mcontenido,
+    colorLerpSpeed
+  );
+}
 
   composer.render();
 

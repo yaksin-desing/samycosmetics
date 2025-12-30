@@ -320,7 +320,7 @@ button {
   flex-direction: column-reverse;
   inset: 0;
   z-index: 10;
-  height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
 
@@ -442,7 +442,6 @@ button {
 }
 .detalle_uno {
   width: 100%;
-  margin: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -454,7 +453,6 @@ button {
 }
 .detalle_dos {
   width: 100%;
-  margin: 7px;
     display: flex;
   align-items: center;
   justify-content: center;
@@ -466,7 +464,6 @@ button {
 }
 .detalle_tres {
   width: 100%;
-  margin: 7px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -509,7 +506,6 @@ button {
   width: 100%;
 }
 .detalle_uno {
-  margin: 15px;
     display: flex;
   align-items: center;
   justify-content: center;
@@ -520,7 +516,6 @@ button {
   color: #000000;
 }
 .detalle_dos {
-  margin: 15px;
     display: flex;
   align-items: center;
   justify-content: center;
@@ -533,7 +528,6 @@ button {
 }
 
 .detalle_tres {
-  margin: 15px;
   display: flex;
   align-items: center;
   justify-content: center;

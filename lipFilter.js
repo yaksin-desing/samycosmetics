@@ -240,54 +240,75 @@ window.addEventListener('carouselColorChange', e => {
 });
 
 // ===============================
-// CAPTURE
+// CAPTURE (FINAL CORRECTO)
 // ===============================
 captureBtn.addEventListener('click', () => {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+
+  const container = document.querySelector('.camera-container');
+  const rect = container.getBoundingClientRect();
+
+  const vw = Math.round(rect.width);
+  const vh = Math.round(rect.height);
+  const dpr = window.devicePixelRatio || 1;
 
   const output = document.createElement('canvas');
-  output.width = vw;
-  output.height = vh;
+  output.width = vw * dpr;
+  output.height = vh * dpr;
 
   const octx = output.getContext('2d');
+  octx.scale(dpr, dpr);
 
   // ===============================
-  // VIDEO → OBJECT-FIT: COVER
+  // VIDEO → COVER CROP
   // ===============================
-  const videoAspect = video.videoWidth / video.videoHeight;
-  const screenAspect = vw / vh;
+  const videoW = video.videoWidth;
+  const videoH = video.videoHeight;
 
-  let drawWidth, drawHeight, offsetX, offsetY;
+  const videoRatio = videoW / videoH;
+  const viewRatio = vw / vh;
 
-  if (videoAspect > screenAspect) {
-    // video más ancho → recortar lados
-    drawHeight = vh;
-    drawWidth = vh * videoAspect;
-    offsetX = (vw - drawWidth) / 2;
-    offsetY = 0;
+  let sx = 0, sy = 0, sw = videoW, sh = videoH;
+
+  if (videoRatio > viewRatio) {
+    // Video más ancho → recorte lateral
+    sh = videoH;
+    sw = sh * viewRatio;
+    sx = (videoW - sw) / 2;
   } else {
-    // video más alto → recortar arriba/abajo
-    drawWidth = vw;
-    drawHeight = vw / videoAspect;
-    offsetX = 0;
-    offsetY = (vh - drawHeight) / 2;
+    // Video más alto → recorte vertical
+    sw = videoW;
+    sh = sw / viewRatio;
+    sy = (videoH - sh) / 2;
   }
 
-  octx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
+  // ===============================
+  // 1️⃣ VIDEO
+  // ===============================
+  octx.drawImage(
+    video,
+    sx, sy, sw, sh,
+    0, 0, vw, vh
+  );
 
   // ===============================
-  // FILTRO LABIOS (MISMA PROPORCIÓN)
+  // 2️⃣ FILTRO (MISMO CROP 👈 CLAVE)
   // ===============================
-  octx.drawImage(canvas, 0, 0, vw, vh);
+  octx.drawImage(
+    canvas,
+    sx, sy, sw, sh,
+    0, 0, vw, vh
+  );
 
   // ===============================
-  // MARCO (HTML → CANVAS)
+  // 3️⃣ MARCO HTML
   // ===============================
-  html2canvas(document.querySelector('.marco'), {
+  const marco = document.querySelector('.marco');
+
+  html2canvas(marco, {
     backgroundColor: null,
-    scale: window.devicePixelRatio
+    scale: dpr
   }).then(marcoCanvas => {
+
     octx.drawImage(marcoCanvas, 0, 0, vw, vh);
 
     const a = document.createElement('a');
@@ -296,6 +317,9 @@ captureBtn.addEventListener('click', () => {
     a.click();
   });
 });
+
+
+
 
 
 // ===============================

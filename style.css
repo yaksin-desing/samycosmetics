@@ -385,6 +385,9 @@ button {
   width: 100vw;
   height: 100dvh;
   object-fit: cover;
+  overflow: hidden;
+
+
 }
 
 #camera-canvas {
@@ -499,6 +502,18 @@ button {
   #titulo_item_camera {
     width: 100%;
   }
+
+  
+.nav_camara {
+  position:absolute;
+  display: flex;
+  flex-direction: row;
+  left: 50%;
+  bottom: 17vh;
+  transform: translateX(-50%);
+  z-index: 100;
+  gap: 10px;
+}
 
 
   #titulo_item_camera {

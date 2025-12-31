@@ -100,8 +100,12 @@
   <div class="popup-overlay" id="camera-popup">
     <div class="popup" style="padding:0; width:100%; height:100%; max-width:none;">
 
-
+      <div class="nav_camara">
+        <button id="back-camera" class="capture-btn back-btn"><img src="boton_back.svg" alt=""></button>
+        <button id="capture-photo" class="capture-btn"><img src="boton_capt.svg" alt=""></button>
+      </div>
       <div class="camera-container">
+
         <div class="marco">
           <div class="columnas_marco">
             <div class="col_marco_top">
@@ -111,10 +115,7 @@
             <div class="col_marco_riht"></div>
           </div>
           <div class="base_marco">
-            <div class="nav_camara">
-              <button id="back-camera" class="capture-btn back-btn"><img src="boton_back.svg" alt=""></button>
-              <button id="capture-photo" class="capture-btn"><img src="boton_capt.svg" alt=""></button>
-            </div>
+
 
             <p id="titulo_item_camera">CAPPUCCINO</p>
 
@@ -148,6 +149,7 @@
 
   <script type="module" src="./main.js"></script>
   <script type="module" src="./carrucel.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script type="module" src="./lipFilter.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3/camera_utils.js"></script>

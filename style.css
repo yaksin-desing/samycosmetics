@@ -5,37 +5,41 @@
   font-style: normal;
 }
 
-html, body { 
-  width: 100vw; 
-  height: 100vh; 
-  margin: 0; 
+html,
+body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
   overflow: hidden;
 }
 
-#canvas-container { 
+#canvas-container {
   z-index: -2;
-  width: 100vw; 
-  height: 100vh; 
-  overflow: hidden; 
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
-canvas { display: block; }
+canvas {
+  display: block;
+}
 
-.stats { 
-  position: absolute; 
-  left: 0; 
-  top: 0; 
+.stats {
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 /* ===========================
    LOADING SCREEN
 =========================== */
 #loading-screen {
-    width: 100vw; 
-  height: 100vh; 
+  width: 100vw;
+  height: 100vh;
   position: fixed;
   inset: 0;
-  background: #00000010; /* transparente suave */
+  background: #00000010;
+  /* transparente suave */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -55,11 +59,13 @@ canvas { display: block; }
 }
 
 @keyframes spin {
-  100% { transform: rotate(360deg); }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 
-.nav{
+.nav {
   position: absolute;
   top: 0px;
   margin-top: 20px;
@@ -69,7 +75,8 @@ canvas { display: block; }
   justify-content: center;
   width: 100vw;
 }
-.nav img{
+
+.nav img {
   z-index: 0;
 }
 
@@ -77,7 +84,7 @@ canvas { display: block; }
 .carousel {
   position: absolute;
   left: 50%;
-  bottom:0%;
+  bottom: 0%;
   transform: translate(-50%, -0%);
   z-index: 9;
   width: 100%;
@@ -92,7 +99,7 @@ canvas { display: block; }
   position: relative;
   width: 100%;
   height: 100%;
-  transform-style: preserve-3d;  
+  transform-style: preserve-3d;
 }
 
 
@@ -101,13 +108,13 @@ canvas { display: block; }
   top: 50%;
   left: 50%;
   width: 170px;
-  height:fit-content;
+  height: fit-content;
   border-radius: 9px;
   padding: 7px;
   background: #ffffff;
   transform-style: preserve-3d;
-   transform-origin: center center;
-  transition: 
+  transform-origin: center center;
+  transition:
     transform 0.6s ease,
     opacity 0.6s ease;
   display: flex;
@@ -115,7 +122,7 @@ canvas { display: block; }
   justify-content: center;
   flex-direction: column;
   border: 1px solid transparent;
-    filter: blur(0px);
+  filter: blur(0px);
   transition:
     transform 0.6s ease,
     opacity 0.6s ease,
@@ -126,7 +133,8 @@ canvas { display: block; }
 .item-btn {
   position: absolute;
   left: 50%;
-  bottom: 0; /* empieza detrás del item */
+  bottom: 0;
+  /* empieza detrás del item */
   transform: translateX(-50%) translateY(9px) scale(0.8);
   z-index: -1;
   width: 100%;
@@ -153,7 +161,7 @@ canvas { display: block; }
   transition-delay: 0.20s;
   opacity: 1;
   pointer-events: auto;
-      box-shadow: 
+  box-shadow:
     0 0px 17px rgba(0, 0, 0, 0.459);
 }
 
@@ -161,11 +169,11 @@ canvas { display: block; }
 
 .item.is-center {
 
-    box-shadow: 
+  box-shadow:
     0 0px 17px rgba(0, 0, 0, 0.459);
 }
 
-.item .titulo_item{
+.item .titulo_item {
   font-family: "mona";
   width: 100%;
   text-align: center;
@@ -173,7 +181,7 @@ canvas { display: block; }
   color: #000000;
 }
 
-.item .color_item{
+.item .color_item {
   position: relative;
   width: 100%;
   height: 40px;
@@ -195,7 +203,7 @@ canvas { display: block; }
   width: 40%;
   display: flex;
   justify-content: space-between;
-  
+
 }
 
 
@@ -207,7 +215,7 @@ button {
   cursor: pointer;
 }
 
-.parrafo{
+.parrafo {
   position: absolute;
   bottom: 0px;
   z-index: 9;
@@ -225,7 +233,7 @@ button {
 .popup-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
@@ -259,6 +267,7 @@ button {
     transform: translateY(20px) scale(0.95);
     opacity: 0;
   }
+
   to {
     transform: translateY(0) scale(1);
     opacity: 1;
@@ -328,6 +337,7 @@ button {
   position: absolute;
   inset: 0;
 }
+
 .col_marco_top {
   position: absolute;
   top: 0;
@@ -336,12 +346,13 @@ button {
   background: #ffffff;
 }
 
-.col_marco_top img{
+.col_marco_top img {
   position: absolute;
-  bottom:-100%;
+  bottom: -100%;
   left: 50%;
   transform: translateX(-50%);
 }
+
 .col_marco_left {
   position: absolute;
   left: 0;
@@ -349,6 +360,7 @@ button {
   height: 100%;
   background: #ffffff;
 }
+
 .col_marco_riht {
   position: absolute;
   right: 0;
@@ -380,14 +392,14 @@ button {
   inset: 0;
 }
 
-.nav_camara{
-  position: absolute;
+.nav_camara {
+  position:absolute;
   display: flex;
   flex-direction: row;
   left: 50%;
-  bottom: 100%;
+  bottom: 27vh;
   transform: translateX(-50%);
-  z-index: 10;
+  z-index: 100;
   gap: 10px;
 }
 
@@ -410,66 +422,72 @@ button {
 /* ===========================
    BACK BUTTON (CAMERA)
 =========================== */
-.back-btn {
-}
+.back-btn {}
 
-.capture-btn img{
+.capture-btn img {
   width: 100%;
   height: 100%;
 }
 
-#titulo_item_camera{
+#titulo_item_camera {
   width: 100%;
   margin: 0;
-    font-family: "mona";
+  font-family: "mona";
   text-align: center;
   font-size: 3.5vw;
   color: #000000;
 }
 
-.cont_marco_icon{
+.cont_marco_icon {
   width: 100%;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   border-bottom: #000000 2px solid;
 }
+
 .barra_detalles {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
   width: 100%;
 }
+
 .detalle_uno {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.detalle_uno p{
+
+.detalle_uno p {
   font-family: "mona";
   font-size: 1.5vw;
   color: #000000;
 }
+
 .detalle_dos {
   width: 100%;
-    display: flex;
+  display: flex;
   align-items: center;
   justify-content: center;
 }
-.detalle_dos p{
+
+.detalle_dos p {
   font-family: "mona";
   font-size: 1.5vw;
   color: #000000;
 }
+
 .detalle_tres {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  
+
 }
-.detalle_tres img{
+
+.detalle_tres img {
   width: 10vw;
 }
 
@@ -479,63 +497,68 @@ button {
     display: none;
   }
 
-  #titulo_item_camera{
-  width: 100%;
-}
-
-#titulo_item_camera{
-  font-family: "mona";
-  text-align: center;
-  font-size: 20px;
-  color: #000000;
-}
-
-.cont_marco_icon{
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  border-bottom: #000000 2px solid;
-}
+  #titulo_item_camera {
+    width: 100%;
+  }
 
 
-.barra_detalles {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  width: 100%;
-}
-.detalle_uno {
+  #titulo_item_camera {
+    font-family: "mona";
+    text-align: center;
+    font-size: 20px;
+    color: #000000;
+  }
+
+  .cont_marco_icon {
+    width: 100%;
     display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.detalle_uno p{
-  font-family: "mona";
-  font-size: 3.5vw;
-  color: #000000;
-}
-.detalle_dos {
+    flex-direction: row;
+    justify-content: space-between;
+    border-bottom: #000000 2px solid;
+  }
+
+
+  .barra_detalles {
     display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+  }
 
-.detalle_dos p{
-  font-family: "mona";
-  font-size: 3.5vw;
-  color: #000000;
-}
+  .detalle_uno {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-.detalle_tres {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-}
-.detalle_tres img{
-  width: 100%;
-}
+  .detalle_uno p {
+    font-family: "mona";
+    font-size: 3.5vw;
+    color: #000000;
+  }
+
+  .detalle_dos {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .detalle_dos p {
+    font-family: "mona";
+    font-size: 3.5vw;
+    color: #000000;
+  }
+
+  .detalle_tres {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+  }
+
+  .detalle_tres img {
+    width: 100%;
+  }
 
 
 }

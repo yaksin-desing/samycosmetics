@@ -242,15 +242,36 @@ window.addEventListener('carouselColorChange', e => {
 // ===============================
 // CAPTURE
 // ===============================
-captureBtn.addEventListener('click', () => {
+captureBtn.addEventListener('click', async () => {
   const output = document.createElement('canvas');
   output.width = canvas.width;
   output.height = canvas.height;
-
   const octx = output.getContext('2d');
-  octx.drawImage(video, 0, 0);
-  octx.drawImage(canvas, 0, 0);
 
+  // 1️⃣ Video
+  octx.drawImage(video, 0, 0, output.width, output.height);
+
+  // 2️⃣ Filtro labios
+  octx.drawImage(canvas, 0, 0, output.width, output.height);
+
+  // 3️⃣ Marco (DOM)
+  const marco = document.querySelector('.marco');
+
+  const marcoCanvas = await html2canvas(marco, {
+    backgroundColor: null,
+    scale: window.devicePixelRatio,
+    useCORS: true
+  });
+
+  octx.drawImage(
+    marcoCanvas,
+    0,
+    0,
+    output.width,
+    output.height
+  );
+
+  // 4️⃣ Exportar
   const a = document.createElement('a');
   a.href = output.toDataURL('image/png');
   a.download = 'Test_labial_samy.png';

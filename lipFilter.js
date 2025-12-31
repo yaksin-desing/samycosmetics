@@ -242,41 +242,61 @@ window.addEventListener('carouselColorChange', e => {
 // ===============================
 // CAPTURE
 // ===============================
-captureBtn.addEventListener('click', async () => {
+captureBtn.addEventListener('click', () => {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
   const output = document.createElement('canvas');
-  output.width = canvas.width;
-  output.height = canvas.height;
+  output.width = vw;
+  output.height = vh;
+
   const octx = output.getContext('2d');
 
-  // 1️⃣ Video
-  octx.drawImage(video, 0, 0, output.width, output.height);
+  // ===============================
+  // VIDEO → OBJECT-FIT: COVER
+  // ===============================
+  const videoAspect = video.videoWidth / video.videoHeight;
+  const screenAspect = vw / vh;
 
-  // 2️⃣ Filtro labios
-  octx.drawImage(canvas, 0, 0, output.width, output.height);
+  let drawWidth, drawHeight, offsetX, offsetY;
 
-  // 3️⃣ Marco (DOM)
-  const marco = document.querySelector('.marco');
+  if (videoAspect > screenAspect) {
+    // video más ancho → recortar lados
+    drawHeight = vh;
+    drawWidth = vh * videoAspect;
+    offsetX = (vw - drawWidth) / 2;
+    offsetY = 0;
+  } else {
+    // video más alto → recortar arriba/abajo
+    drawWidth = vw;
+    drawHeight = vw / videoAspect;
+    offsetX = 0;
+    offsetY = (vh - drawHeight) / 2;
+  }
 
-  const marcoCanvas = await html2canvas(marco, {
+  octx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
+
+  // ===============================
+  // FILTRO LABIOS (MISMA PROPORCIÓN)
+  // ===============================
+  octx.drawImage(canvas, 0, 0, vw, vh);
+
+  // ===============================
+  // MARCO (HTML → CANVAS)
+  // ===============================
+  html2canvas(document.querySelector('.marco'), {
     backgroundColor: null,
-    scale: window.devicePixelRatio,
-    useCORS: true
+    scale: window.devicePixelRatio
+  }).then(marcoCanvas => {
+    octx.drawImage(marcoCanvas, 0, 0, vw, vh);
+
+    const a = document.createElement('a');
+    a.href = output.toDataURL('image/png');
+    a.download = 'Test_labial_samy.png';
+    a.click();
   });
-
-  octx.drawImage(
-    marcoCanvas,
-    0,
-    0,
-    output.width,
-    output.height
-  );
-
-  // 4️⃣ Exportar
-  const a = document.createElement('a');
-  a.href = output.toDataURL('image/png');
-  a.download = 'Test_labial_samy.png';
-  a.click();
 });
+
 
 // ===============================
 // EVENTS

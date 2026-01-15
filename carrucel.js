@@ -173,7 +173,7 @@ updateCarousel();
 // DATA POPUP
 // ==================
 const popupData = {
-  LATTE: { description: 'Café suave con leche cremosa.' },
+  LATTE: { description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.' },
   MACCHIATO: { description: 'Espresso con un toque de leche.' },
   CAPPUCCINO: { description: 'Equilibrio perfecto entre café y espuma.' },
   MOCHA: { description: 'Café con chocolate intenso.' },

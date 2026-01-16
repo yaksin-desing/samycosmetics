@@ -243,18 +243,17 @@ canvas {
 .popup-overlay.active {
   opacity: 1;
   pointer-events: auto;
+  width: 100%;
 }
 
 .popup {
   background: #ffffff;
-  border-radius: 5px;
-  padding: 22px;
-  width: 320px;
-  max-width: 90%;
+  border-radius: 10px;
   text-align: center;
   font-family: "mona";
-  position: relative;
+  position: absolute;
   animation: popupIn 0.45s ease;
+  width: 300px;
 }
 
 @keyframes popupIn {
@@ -269,15 +268,40 @@ canvas {
   }
 }
 
+.cont_data{
+  padding: 10px 15px 15px 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+}
+
+.cont-titulo{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
 .popup-title{
-  margin: 0 0 7px;
+  margin: 0px;
   font-size: 1.7rem;
   text-align: left;
 }
+.popup-price{
+  margin: 0 0 7px 10px;
+  font-size: 1.2rem;
+  font-family: "mona";
+  text-align: center;
 
+}
 
 #popup-description {
-  margin: 0 0 10px;
+  margin: 0px;
   font-size: 0.7rem;
   font-family: "mona";
   text-align: left;
@@ -285,7 +309,7 @@ canvas {
 
 .popup .parrafo {
   font-size: 14px;
-  margin-bottom: 14px;
+  margin-bottom: 0px;
 }
 
 .popup-color {
@@ -301,16 +325,26 @@ button {
   cursor: pointer;
   font-size: 1rem;
   font-family: "mona";
-    padding: 10px;
+  padding: 10px;
 }
 
 .labios{
   width: 100%;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  background-image: url('labios.png');
-  background-size: cover;
-  background-position: center;
+  border-radius: 10px 10px 0px 0px;
+  margin-bottom: 0px;
+}
+
+.try-lips-btn{
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #f0f0f0;
+  color: #000;
+  cursor: pointer;
+  font-family: "mona";
+  font-size: 1rem;
+  margin-bottom: 10px;
 }
 
 .popup-action {
@@ -326,13 +360,17 @@ button {
 }
 
 .popup-close {
-  background: none;
-  border: none;
-  font-size: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 0;
-  width: 100%;
-  text-align: end;
+  padding: 5;
+  position: absolute;
+  border-radius: 10px;
+  top: 10px;
+  right: 15px;
+  background: #ffffff;
+
 }
 
 

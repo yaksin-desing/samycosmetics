@@ -21,7 +21,9 @@ function emitCenterColor() {
 
   window.dispatchEvent(
     new CustomEvent('carouselColorChange', {
-      detail: { color: bgColor }
+      detail: {
+        color: bgColor
+      }
     })
   );
 }
@@ -136,12 +138,16 @@ carousel.addEventListener('touchstart', (e) => {
 
   // 🔥 Si el toque empezó en un botón, NO activar swipe
   isButtonTouch = e.target.closest('.item-btn') !== null;
-}, { passive: true });
+}, {
+  passive: true
+});
 
 carousel.addEventListener('touchmove', (e) => {
   if (!isDragging || isButtonTouch) return;
   currentX = e.touches[0].clientX;
-}, { passive: true });
+}, {
+  passive: true
+});
 
 carousel.addEventListener('touchend', () => {
   if (!isDragging || isButtonTouch) {
@@ -153,9 +159,9 @@ carousel.addEventListener('touchend', () => {
   const diff = startX - currentX;
 
   if (Math.abs(diff) > threshold) {
-    index = diff > 0
-      ? (index + 1) % total
-      : (index - 1 + total) % total;
+    index = diff > 0 ?
+      (index + 1) % total :
+      (index - 1 + total) % total;
 
     updateCarousel();
   }
@@ -173,12 +179,48 @@ updateCarousel();
 // DATA POPUP
 // ==================
 const popupData = {
-  LATTE: { description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.' },
-  MACCHIATO: { description: 'Espresso con un toque de leche.' },
-  CAPPUCCINO: { description: 'Equilibrio perfecto entre café y espuma.' },
-  MOCHA: { description: 'Café con chocolate intenso.' },
-  AMARETTO: { description: 'Café aromatizado con licor.' },
-  ESPRESSO: { description: 'Café fuerte y concentrado.' }
+  LATTE: {
+    description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
+    price: '$ 17.400',
+    image: 'labios_uno.png',
+    cameraImage: 'foto_latte.png',
+    skinTones: ['#F1CBB1', '#C99873', '#8E5A3C']
+  },
+  MACCHIATO: {
+    description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
+    price: '$ 17.400',
+    image: 'labios_dos.png',
+    cameraImage: 'foto_macchiato.png',
+    skinTones: ['#F0D2BA', '#CFA27C', '#7A4A2C']
+  },
+  CAPPUCCINO: {
+    description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
+    price: '$ 17.400',
+    image: 'labios_tres.png',
+    cameraImage: 'foto_cappuccino.png',
+    skinTones: ['#EBC4A8', '#B57D5B', '#6B3A1E']
+  },
+  MOCHA: {
+    description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
+    price: '$ 18.200',
+    image: 'labios_cuatro.png',
+    cameraImage: 'foto_mocha.png',
+    skinTones: ['#D6A98A', '#9B6544', '#4C2917']
+  },
+  AMARETTO: {
+    description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
+    price: '$ 18.200',
+    image: 'labios_cinco.png',
+    cameraImage: 'foto_amaretto.png',
+    skinTones: ['#E2B99A', '#B07955', '#5E3620']
+  },
+  ESPRESSO: {
+    description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
+    price: '$ 18.200',
+    image: 'labios_seis.png',
+    cameraImage: 'foto_espresso.png',
+    skinTones: ['#C89B7B', '#8A5A3C', '#3B1E10']
+  }
 };
 
 // ==================
@@ -187,12 +229,19 @@ const popupData = {
 const popup = document.getElementById('popup');
 const popupTitle = document.getElementById('popup-title');
 const popupDescription = document.getElementById('popup-description');
-const popupColor = document.getElementById('popup-color');
 const popupClose = document.querySelector('.popup-close');
+const popupImage = document.querySelector('.labios');
+const popupPrice = document.getElementById('popup-price');
+const popupColors = document.getElementById('popup-colors');
+const cameraTitle = document.getElementById('titulo_item_camera');
+const cameraImage = document.querySelector('.detalle_tres img');
 
-// 🔥 USAMOS touchend + click (tap instantáneo)
-document.addEventListener('touchend', openPopup);
-document.addEventListener('click', openPopup);
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.item-btn')) {
+    openPopup(e);
+  }
+});
 
 function openPopup(e) {
   const btn = e.target.closest('.item-btn');
@@ -200,19 +249,44 @@ function openPopup(e) {
 
   e.preventDefault();
 
-  const item = btn.closest('.item');
-  const title = item.querySelector('.titulo_item').innerText;
+  const item = document.querySelector('.item.is-center');
+  if (!item) return;
+
+  const title = item.querySelector('.titulo_item').innerText.trim();
+  const data = popupData[title];
+  if (!data) return;
+
   const color = getComputedStyle(
     item.querySelector('.color_item')
   ).backgroundColor;
 
+  // Texto
   popupTitle.innerText = title;
-  popupDescription.innerText =
-    popupData[title]?.description || '';
+  popupDescription.innerText = data.description;
+  popupPrice.innerText = data.price;
 
-  popupColor.style.background = color;
+  // Imagen principal
+  popupImage.src = data.image;
+  popupImage.alt = title;
+
+  // Colores recomendados
+  popupColors.innerHTML = '';
+  data.skinTones.forEach(tone => {
+    const div = document.createElement('div');
+    div.className = 'popup-color';
+    div.style.background = tone;
+    popupColors.appendChild(div);
+  });
+
+
+
+  // Cámara
+  cameraTitle.innerText = title;
+  cameraImage.src = data.cameraImage;
+
   popup.classList.add('active');
 }
+
 
 // Cerrar popup
 popupClose.addEventListener('click', () => {

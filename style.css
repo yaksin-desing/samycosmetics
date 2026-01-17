@@ -289,12 +289,12 @@ canvas {
 
 .popup-title{
   margin: 0px;
-  font-size: 1.7rem;
+  font-size: 1.5rem;
   text-align: left;
 }
 .popup-price{
   margin: 0 0 7px 10px;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-family: "mona";
   text-align: center;
 
@@ -319,7 +319,12 @@ canvas {
 }
 
 
-.cont_colores{
+.conten_colores{
+  width: 100%;
+
+}
+
+#popup-colors{
   width: 100%;
   display: flex;
   flex-direction: row;

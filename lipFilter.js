@@ -45,11 +45,6 @@ const LIPS_INNER = [
   324,318,402,317,14,87
 ];
 
-const MOUTH_OPENING = [
-  13,312,311,310,415,308,
-  324,318,402,317,14,87
-];
-
 // ===============================
 // CAMERA CONTROL
 // ===============================
@@ -129,7 +124,7 @@ function initFaceMesh() {
 }
 
 // ===============================
-// FACE GUIDE (OVALO)
+// FACE GUIDE
 // ===============================
 function drawFaceGuide() {
   const w = canvas.width;
@@ -240,9 +235,17 @@ window.addEventListener('carouselColorChange', e => {
 });
 
 // ===============================
-// CAPTURE (FINAL CORRECTO)
+// CAPTURE (CON MARCO POR CAPAS)
 // ===============================
-captureBtn.addEventListener('click', () => {
+captureBtn.addEventListener('click', async () => {
+
+  const marco = document.querySelector('.marco');
+
+  // 🔹 Mostrar SOLO las partes ocultas para el PNG
+  marco.classList.add('capture-visible');
+
+  // 🔹 Esperar repaint
+  await new Promise(r => requestAnimationFrame(r));
 
   const container = document.querySelector('.camera-container');
   const rect = container.getBoundingClientRect();
@@ -258,9 +261,6 @@ captureBtn.addEventListener('click', () => {
   const octx = output.getContext('2d');
   octx.scale(dpr, dpr);
 
-  // ===============================
-  // VIDEO → COVER CROP
-  // ===============================
   const videoW = video.videoWidth;
   const videoH = video.videoHeight;
 
@@ -270,39 +270,15 @@ captureBtn.addEventListener('click', () => {
   let sx = 0, sy = 0, sw = videoW, sh = videoH;
 
   if (videoRatio > viewRatio) {
-    // Video más ancho → recorte lateral
-    sh = videoH;
     sw = sh * viewRatio;
     sx = (videoW - sw) / 2;
   } else {
-    // Video más alto → recorte vertical
-    sw = videoW;
     sh = sw / viewRatio;
     sy = (videoH - sh) / 2;
   }
 
-  // ===============================
-  // 1️⃣ VIDEO
-  // ===============================
-  octx.drawImage(
-    video,
-    sx, sy, sw, sh,
-    0, 0, vw, vh
-  );
-
-  // ===============================
-  // 2️⃣ FILTRO (MISMO CROP 👈 CLAVE)
-  // ===============================
-  octx.drawImage(
-    canvas,
-    sx, sy, sw, sh,
-    0, 0, vw, vh
-  );
-
-  // ===============================
-  // 3️⃣ MARCO HTML
-  // ===============================
-  const marco = document.querySelector('.marco');
+  octx.drawImage(video, sx, sy, sw, sh, 0, 0, vw, vh);
+  octx.drawImage(canvas, sx, sy, sw, sh, 0, 0, vw, vh);
 
   html2canvas(marco, {
     backgroundColor: null,
@@ -311,16 +287,15 @@ captureBtn.addEventListener('click', () => {
 
     octx.drawImage(marcoCanvas, 0, 0, vw, vh);
 
+    // 🔹 Ocultar de nuevo inmediatamente
+    marco.classList.remove('capture-visible');
+
     const a = document.createElement('a');
     a.href = output.toDataURL('image/png');
     a.download = 'Test_labial_samy.png';
     a.click();
   });
 });
-
-
-
-
 
 // ===============================
 // EVENTS

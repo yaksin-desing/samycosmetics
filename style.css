@@ -268,7 +268,7 @@ canvas {
   }
 }
 
-.cont_data{
+.cont_data {
   padding: 10px 15px 15px 15px;
   display: flex;
   flex-direction: column;
@@ -277,7 +277,7 @@ canvas {
 
 }
 
-.cont-titulo{
+.cont-titulo {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -287,12 +287,13 @@ canvas {
   margin-bottom: 2px;
 }
 
-.popup-title{
+.popup-title {
   margin: 0px;
   font-size: 1.5rem;
   text-align: left;
 }
-.popup-price{
+
+.popup-price {
   margin: 0 0 7px 10px;
   font-size: 1rem;
   font-family: "mona";
@@ -312,30 +313,32 @@ canvas {
   margin-bottom: 0px;
 }
 
-.cont_subtitle{
+.cont_subtitle {
   width: 100%;
   display: flex;
   flex-direction: column;
 }
 
 
-.conten_colores{
+.conten_colores {
   width: 100%;
 
 }
 
-#popup-colors{
+#popup-colors {
   width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
 }
-.popup-subtitle{
+
+.popup-subtitle {
   margin: 5px 0px;
   font-size: 0.5rem;
   text-align: left;
 }
+
 .popup-color {
   width: 15px;
   height: 15px;
@@ -353,13 +356,13 @@ button {
   padding: 10px;
 }
 
-.labios{
+.labios {
   width: 100%;
   border-radius: 10px 10px 0px 0px;
   margin-bottom: 0px;
 }
 
-.try-lips-btn{
+.try-lips-btn {
   width: 100%;
   padding: 10px;
   border-radius: 10px;
@@ -577,6 +580,35 @@ button {
 
 .detalle_tres img {
   width: 10vw;
+}
+
+
+/* Partes del marco ocultas en preview */
+.col_marco_left,
+.col_marco_riht,
+.base_marco {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+/* Logo SIEMPRE visible */
+.col_marco_top {
+  opacity: 1;
+  background: #ffffff00;
+}
+
+
+.marco.capture-visible .col_marco_top
+{
+background: #ffffff;
+}
+
+/* Se muestran SOLO al capturar */
+.marco.capture-visible .col_marco_left,
+.marco.capture-visible .col_marco_riht,
+.marco.capture-visible .base_marco {
+  opacity: 1;
 }
 
 

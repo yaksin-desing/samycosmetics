@@ -496,7 +496,6 @@ button {
 }
 
 
-
 /* ===========================
    CAPTURE BUTTON
 =========================== */
@@ -575,9 +574,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-
 }
-
 .detalle_tres img {
   width: 10vw;
 }

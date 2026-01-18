@@ -183,43 +183,43 @@ const popupData = {
     description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
     price: '$ 17.400',
     image: 'labios_uno.png',
-    cameraImage: 'foto_latte.png',
-    skinTones: ['#F1CBB1', '#C99873', '#8E5A3C']
+    cameraImage: 'foto_uno.png',
+    skinTones: ['#F1CBB1', '#FFBC89', '#FDB78F']
   },
   MACCHIATO: {
     description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
     price: '$ 17.400',
     image: 'labios_dos.png',
-    cameraImage: 'foto_macchiato.png',
-    skinTones: ['#F0D2BA', '#CFA27C', '#7A4A2C']
+    cameraImage: 'foto_dos.png',
+    skinTones: ['#F0D2BA', '#FFD6B4', '#FFB080']
   },
   CAPPUCCINO: {
     description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
     price: '$ 17.400',
     image: 'labios_tres.png',
-    cameraImage: 'foto_cappuccino.png',
-    skinTones: ['#EBC4A8', '#B57D5B', '#6B3A1E']
+    cameraImage: 'foto_tres.png',
+    skinTones: ['#EBC4A8', '#FFB98E', '#FFA978']
   },
   MOCHA: {
     description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
     price: '$ 18.200',
     image: 'labios_cuatro.png',
-    cameraImage: 'foto_mocha.png',
+    cameraImage: 'foto_cuatro.png',
     skinTones: ['#D6A98A', '#9B6544', '#4C2917']
   },
   AMARETTO: {
     description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
     price: '$ 18.200',
     image: 'labios_cinco.png',
-    cameraImage: 'foto_amaretto.png',
-    skinTones: ['#E2B99A', '#B07955', '#5E3620']
+    cameraImage: 'foto_cinco.png',
+    skinTones: ['#E2B99A', '#F8A36A', '#5E3620']
   },
   ESPRESSO: {
     description: 'Labiales Líquidos Cremosos formulados con emolientes y acondicionadores que suavizan e hidratan los labios. Su fórmula cremosa, con cera de semillas de girasol que deja una sensación aterciopelada en los labios, es fluida y de alta cobertura.',
     price: '$ 18.200',
     image: 'labios_seis.png',
-    cameraImage: 'foto_espresso.png',
-    skinTones: ['#C89B7B', '#8A5A3C', '#3B1E10']
+    cameraImage: 'foto_seis.png',
+    skinTones: ['#FFD1AF', '#A05323', '#3B1E10']
   }
 };
 

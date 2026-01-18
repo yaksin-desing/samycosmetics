@@ -35,14 +35,14 @@ const SMOOTH = 0.55;
 // LANDMARKS
 // ===============================
 const LIPS_OUTER = [
-  61,185,40,39,37,0,267,269,270,409,291,
-  375,321,405,314,17,84,181,91,146
+  61, 185, 40, 39, 37, 0, 267, 269, 270, 409, 291,
+  375, 321, 405, 314, 17, 84, 181, 91, 146
 ];
 
 const LIPS_INNER = [
-  78,191,80,81,82,13,
-  312,311,310,415,308,
-  324,318,402,317,14,87
+  78, 191, 80, 81, 82, 13,
+  312, 311, 310, 415, 308,
+  324, 318, 402, 317, 14, 87
 ];
 
 // ===============================
@@ -67,14 +67,16 @@ async function openCamera() {
   if (running) return;
   running = true;
 
-  window.pauseThree?.();
+  window.pauseThree ?.();
   cameraPopup.classList.add('active');
 
   // 🔑 FIX: recrear el video SIEMPRE
   video = resetVideoElement();
 
   stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: 'user' },
+    video: {
+      facingMode: 'user'
+    },
     audio: false
   });
 
@@ -98,8 +100,8 @@ function closeCamera() {
   }
 
   try {
-    cameraMP?.stop();
-    faceMesh?.close();
+    cameraMP ?.stop();
+    faceMesh ?.close();
   } catch {}
 
   cameraMP = null;
@@ -113,7 +115,7 @@ function closeCamera() {
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  window.resumeThree?.();
+  window.resumeThree ?.();
 }
 
 // ===============================
@@ -135,7 +137,9 @@ function initFaceMesh() {
   faceMesh.onResults(onResults);
 
   cameraMP = new Camera(video, {
-    onFrame: async () => running && faceMesh.send({ image: video })
+    onFrame: async () => running && faceMesh.send({
+      image: video
+    })
   });
 
   cameraMP.start();
@@ -206,7 +210,7 @@ function drawLipsMask(landmarks) {
 // RESULTS
 // ===============================
 function onResults(results) {
-  if (!results.multiFaceLandmarks?.length) {
+  if (!results.multiFaceLandmarks ?.length) {
     detectingFace = true;
     return;
   }
@@ -215,7 +219,9 @@ function onResults(results) {
   const raw = results.multiFaceLandmarks[0];
 
   if (!smoothLandmarks) {
-    smoothLandmarks = raw.map(p => ({ ...p }));
+    smoothLandmarks = raw.map(p => ({
+      ...p
+    }));
   } else {
     raw.forEach((p, i) => {
       smoothLandmarks[i].x += (p.x - smoothLandmarks[i].x) * (1 - SMOOTH);
@@ -263,6 +269,13 @@ captureBtn.addEventListener('click', async () => {
   flash.classList.add('active');
   marco.classList.add('capture-visible');
 
+  
+  // 🔹 Actualizar fecha en el marco ANTES de capturar
+  const fechaEl = document.getElementById('fecha-captura');
+  if (fechaEl) {
+    fechaEl.textContent = obtenerFechaActual();
+  }
+
   await new Promise(r => requestAnimationFrame(r));
 
   const container = document.querySelector('.camera-container');
@@ -285,7 +298,10 @@ captureBtn.addEventListener('click', async () => {
   const videoRatio = videoW / videoH;
   const viewRatio = vw / vh;
 
-  let sx = 0, sy = 0, sw = videoW, sh = videoH;
+  let sx = 0,
+    sy = 0,
+    sw = videoW,
+    sh = videoH;
 
   if (videoRatio > viewRatio) {
     sw = sh * viewRatio;
@@ -297,6 +313,7 @@ captureBtn.addEventListener('click', async () => {
 
   octx.drawImage(video, sx, sy, sw, sh, 0, 0, vw, vh);
   octx.drawImage(canvas, sx, sy, sw, sh, 0, 0, vw, vh);
+
 
   html2canvas(marco, {
     backgroundColor: null,
@@ -320,3 +337,14 @@ captureBtn.addEventListener('click', async () => {
 // ===============================
 openBtn.addEventListener('click', openCamera);
 backBtn.addEventListener('click', closeCamera);
+
+
+function obtenerFechaActual() {
+  const now = new Date();
+
+  const dia = String(now.getDate()).padStart(2, '0');
+  const mes = String(now.getMonth() + 1).padStart(2, '0');
+  const año = now.getFullYear();
+
+  return `${dia}/${mes}/${año}`;
+}

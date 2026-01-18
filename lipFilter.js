@@ -6,7 +6,7 @@ const openBtn = document.getElementById('try-lips-btn');
 const captureBtn = document.getElementById('capture-photo');
 const backBtn = document.getElementById('back-camera');
 
-const video = document.getElementById('camera-video');
+let video = document.getElementById('camera-video');
 const canvas = document.getElementById('camera-canvas');
 const ctx = canvas.getContext('2d');
 
@@ -46,6 +46,21 @@ const LIPS_INNER = [
 ];
 
 // ===============================
+// VIDEO RESET (FIX REAL)
+// ===============================
+function resetVideoElement() {
+  const oldVideo = document.getElementById('camera-video');
+  const newVideo = oldVideo.cloneNode(true);
+
+  newVideo.srcObject = null;
+  newVideo.removeAttribute('src');
+  newVideo.load();
+
+  oldVideo.parentNode.replaceChild(newVideo, oldVideo);
+  return newVideo;
+}
+
+// ===============================
 // CAMERA CONTROL
 // ===============================
 async function openCamera() {
@@ -54,6 +69,9 @@ async function openCamera() {
 
   window.pauseThree?.();
   cameraPopup.classList.add('active');
+
+  // 🔑 FIX: recrear el video SIEMPRE
+  video = resetVideoElement();
 
   stream = await navigator.mediaDevices.getUserMedia({
     video: { facingMode: 'user' },
@@ -148,7 +166,7 @@ function drawFaceGuide() {
   ctx.font = '16px system-ui';
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.textAlign = 'center';
-  ctx.fillText('Detectando rostro…', w / 2, h * 0.75);
+  ctx.fillText('Detectando rostro…', w / 2, h * 0.5);
 
   ctx.restore();
 }
@@ -235,16 +253,16 @@ window.addEventListener('carouselColorChange', e => {
 });
 
 // ===============================
-// CAPTURE (CON MARCO POR CAPAS)
+// CAPTURE (NO TOCADO)
 // ===============================
 captureBtn.addEventListener('click', async () => {
 
   const marco = document.querySelector('.marco');
+  const flash = document.querySelector('.camera-flash');
 
-  // 🔹 Mostrar SOLO las partes ocultas para el PNG
+  flash.classList.add('active');
   marco.classList.add('capture-visible');
 
-  // 🔹 Esperar repaint
   await new Promise(r => requestAnimationFrame(r));
 
   const container = document.querySelector('.camera-container');
@@ -287,7 +305,7 @@ captureBtn.addEventListener('click', async () => {
 
     octx.drawImage(marcoCanvas, 0, 0, vw, vh);
 
-    // 🔹 Ocultar de nuevo inmediatamente
+    flash.classList.remove('active');
     marco.classList.remove('capture-visible');
 
     const a = document.createElement('a');

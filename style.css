@@ -489,7 +489,7 @@ button {
   display: flex;
   flex-direction: row;
   left: 50%;
-  bottom: 27vh;
+  bottom: 10vh;
   transform: translateX(-50%);
   z-index: 100;
   gap: 10px;
@@ -589,7 +589,7 @@ button {
 .base_marco {
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.1s ease;
 }
 
 /* Logo SIEMPRE visible */
@@ -611,6 +611,27 @@ background: #ffffff;
   opacity: 1;
 }
 
+
+.camera-flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.camera-flash.active {
+  animation: cameraFlash 0.25s ease-out;
+}
+
+@keyframes cameraFlash {
+  0%   { opacity: 0; }
+  15%  { opacity: 0.9; }
+  55%  { opacity: 0; }
+  85%  { opacity: 0.4; }
+  100% { opacity: 0; }
+}
 
 @media (max-width: 868px) {
   .controls {

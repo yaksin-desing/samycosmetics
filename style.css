@@ -138,7 +138,7 @@ canvas {
   transform: translateX(-50%) translateY(9px) scale(0.8);
   z-index: -1;
   width: 100%;
-  padding: 6px 14px;
+  padding: 10px 6px 7px 6px;
   border-radius: 7px;
   border: none;
   background: #ffffff;
@@ -148,6 +148,7 @@ canvas {
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
+  text-align: center;
   transition:
     transform 0.45s ease,
     opacity 0.35s ease;
@@ -156,15 +157,14 @@ canvas {
 /* SOLO EL ITEM CENTRAL LO SUBE */
 .item.is-center .item-btn {
   bottom: 100%;
-  transform: translateX(-50%) translateY(-7px) scale(1);
+  transform: translateX(-50%) translateY(-10px) scale(1);
   z-index: 2;
   transition-delay: 0.20s;
   opacity: 1;
   pointer-events: auto;
   box-shadow:
-    0 0px 17px rgba(0, 0, 0, 0.459);
+    0 0px 7px rgba(0, 0, 0, 0.459);
 }
-
 
 
 .item.is-center {
@@ -206,7 +206,29 @@ canvas {
 
 }
 
+#prev{
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transform: rotate(180deg);
+}
 
+
+#next {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
 
 
 
@@ -234,7 +256,6 @@ canvas {
   align-items: center;
   justify-content: center;
   z-index: 99;
-
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
@@ -248,12 +269,13 @@ canvas {
 
 .popup {
   background: #ffffff;
-  border-radius: 10px;
+  border-radius: 7px;
   text-align: center;
   font-family: "mona";
   position: absolute;
   animation: popupIn 0.45s ease;
   width: 300px;
+  
 }
 
 @keyframes popupIn {
@@ -353,12 +375,11 @@ button {
   cursor: pointer;
   font-size: 1rem;
   font-family: "mona";
-  padding: 10px;
 }
 
 .labios {
   width: 100%;
-  border-radius: 10px 10px 0px 0px;
+  border-radius: 7px 7px 0px 0px;
   margin-bottom: 0px;
 }
 
@@ -392,11 +413,11 @@ button {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  padding: 5;
+  padding: 3px;
   position: absolute;
-  border-radius: 10px;
+  border-radius: 100px;
   top: 10px;
-  right: 15px;
+  right: 10px;
   background: #ffffff;
 
 }
@@ -408,8 +429,6 @@ button {
   height: 100dvh;
   overflow: hidden;
 }
-
-
 
 
 .marco {

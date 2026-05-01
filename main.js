@@ -11,30 +11,20 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 let threeRunning = true;
 let rafId = null;
 
-// 👉 EXPUESTO PARA TU FILTRO / CÁMARA
 window.pauseThree = () => {
   if (!threeRunning) return;
-
   threeRunning = false;
-
-  if (rafId) {
-    cancelAnimationFrame(rafId);
-    rafId = null;
-  }
-
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
   clock.stop();
   controls.enabled = false;
-
   console.log("⏸️ Three.js PAUSADO — render detenido");
 };
 
 window.resumeThree = () => {
   if (threeRunning) return;
-
   threeRunning = true;
   clock.start();
   controls.enabled = true;
-
   console.log("▶️ Three.js REANUDADO — render activo");
   animate();
 };
@@ -54,31 +44,24 @@ let cameraGLB = null;
 // ======================================================
 // MATERIALES INTERACTIVOS
 // ======================================================
-const materialesInteractivos = {
-  contenido: null,
-  mcontenido: null
-};
-
+const materialesInteractivos = { contenido: null, mcontenido: null };
 const colorTargets = {
   contenido: new THREE.Color(),
   mcontenido: new THREE.Color()
 };
-
 const colorLerpSpeed = 0.08;
 
 // ======================================================
-// LOADER
+// LOADER — usa saMyLoader (loader/loader.js)
+//
+// IMPORTANTE: en el HTML el orden debe ser:
+//   <script src="./loader/loader.js"></script>        ← sin type="module"
+//   <script type="module" src="./main.js"></script>   ← después
+//
+// saMyLoader.hide() despacha el evento 'loaderHidden'
+// cuando termina el fade-out. Este archivo lo escucha
+// para desbloquear la animación.
 // ======================================================
-function hideLoader() {
-  const loader = document.getElementById("loading-screen");
-  if (!loader) return;
-
-  loader.style.opacity = "0";
-  setTimeout(() => {
-    loader.style.display = "none";
-    loaderHidden = true;
-  }, 600);
-}
 
 function startIfReady() {
   if (animationStarted) return;
@@ -90,6 +73,11 @@ function startIfReady() {
     }
   }
 }
+
+window.addEventListener("loaderHidden", () => {
+  loaderHidden = true;
+  startIfReady();
+});
 
 // ======================================================
 // ESCENA
@@ -115,13 +103,12 @@ camera.position.set(0, 0, 3);
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   alpha: true,
-  powerPreference: "low-power" // 👈 CLAVE
+  powerPreference: "low-power"
 });
-
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 container.appendChild(renderer.domElement);
 
 // ======================================================
@@ -129,12 +116,9 @@ container.appendChild(renderer.domElement);
 // ======================================================
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  0.2,
-  0.1,
-  0.2
+  0.2, 0.1, 0.2
 );
 composer.addPass(bloomPass);
 
@@ -149,55 +133,75 @@ controls.enableDamping = true;
 // ======================================================
 const loader = new GLTFLoader();
 
-loader.load("samy.glb", (gltf) => {
-  const model = gltf.scene;
-  scene.add(model);
-  model.position.set(-0.2, -0.2, -0.2);
+// ── Reemplazá el bloque loader.load() en main.js por esto ──
 
-  model.traverse((obj) => {
-    if (obj.isCamera) {
-      cameraGLB = obj;
-      controls.enabled = false;
-      cameraGLB.fov = 70;
-      cameraGLB.aspect = window.innerWidth / window.innerHeight;
-      cameraGLB.updateProjectionMatrix();
-      return;
-    }
+loader.load(
+  "samy.glb",
 
-    if (obj.isMesh && obj.material) {
-      const matName = obj.material.name;
+  // ✅ onLoad
+  (gltf) => {
+    const model = gltf.scene;
+    scene.add(model);
+    model.position.set(-0.2, -0.2, -0.2);
 
-      if (matName === "contenido" || matName === "mcontenido") {
-        materialesInteractivos[matName] = obj.material;
-        colorTargets[matName].copy(obj.material.color);
+    model.traverse((obj) => {
+      if (obj.isCamera) {
+        cameraGLB = obj;
+        controls.enabled = false;
+        cameraGLB.fov = 70;
+        cameraGLB.aspect = window.innerWidth / window.innerHeight;
+        cameraGLB.updateProjectionMatrix();
+        return;
       }
+      if (obj.isMesh && obj.material) {
+        const matName = obj.material.name;
+        if (matName === "contenido" || matName === "mcontenido") {
+          materialesInteractivos[matName] = obj.material;
+          colorTargets[matName].copy(obj.material.color);
+        }
+      }
+    });
+
+    mixer = new THREE.AnimationMixer(model);
+    mixer.timeScale = 0;
+    gltf.animations.forEach((clip) => {
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopOnce);
+      action.clampWhenFinished = true;
+      action.play();
+    });
+
+    glbReady = true;
+    // ✅ Avisa al loader que el modelo está listo — sin window.saMyLoader
+    window.dispatchEvent(new CustomEvent("glbReady"));
+  },
+
+  // ✅ onProgress
+  (xhr) => {
+    if (xhr.total > 0) {
+      window.dispatchEvent(new CustomEvent("glbProgress", {
+        detail: { pct: (xhr.loaded / xhr.total) * 100 }
+      }));
     }
-  });
+  },
 
-  mixer = new THREE.AnimationMixer(model);
-  mixer.timeScale = 0;
-
-  gltf.animations.forEach((clip) => {
-    const action = mixer.clipAction(clip);
-    action.setLoop(THREE.LoopOnce);
-    action.clampWhenFinished = true;
-    action.play();
-  });
-
-  glbReady = true;
-  hideLoader();
-});
+  // ✅ onError — no bloquea la app si el modelo falla
+  (error) => {
+    console.error("Error al cargar el modelo:", error);
+    glbReady = true;
+    window.dispatchEvent(new CustomEvent("glbProgress", { detail: { pct: 100 } }));
+    window.dispatchEvent(new CustomEvent("glbReady"));
+  }
+);
 
 // ======================================================
 // PARALLAX
 // ======================================================
 let mouseX = 0;
 let targetMouseX = 0;
-
 window.addEventListener("mousemove", (e) => {
   targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
 });
-
 const lerpFactor = 0.05;
 const cameraTarget = new THREE.Vector3(0, 0.5, 0);
 
@@ -206,13 +210,10 @@ const cameraTarget = new THREE.Vector3(0, 0.5, 0);
 // ======================================================
 function animate() {
   if (!threeRunning) return;
-
   rafId = requestAnimationFrame(animate);
 
   const delta = clock.getDelta();
-  if (mixer && clock.running) {
-    mixer.update(delta);
-  }
+  if (mixer && clock.running) mixer.update(delta);
 
   mouseX += (targetMouseX - mouseX) * lerpFactor;
 
@@ -222,26 +223,17 @@ function animate() {
     composer.passes[0].camera = cameraGLB;
   }
 
-  // ===============================
-// COLOR LERP (🔥 ESTO FALTABA)
-// ===============================
-if (materialesInteractivos.contenido) {
-  materialesInteractivos.contenido.color.lerp(
-    colorTargets.contenido,
-    colorLerpSpeed
-  );
-}
-
-if (materialesInteractivos.mcontenido) {
-  materialesInteractivos.mcontenido.color.lerp(
-    colorTargets.mcontenido,
-    colorLerpSpeed
-  );
-}
+  if (materialesInteractivos.contenido) {
+    materialesInteractivos.contenido.color.lerp(colorTargets.contenido, colorLerpSpeed);
+  }
+  if (materialesInteractivos.mcontenido) {
+    materialesInteractivos.mcontenido.color.lerp(colorTargets.mcontenido, colorLerpSpeed);
+  }
 
   composer.render();
 
-  if (glbReady && loaderHidden && !firstFrameRenderedAfterReady) {
+  // Primer frame tras GLB listo — necesario para startIfReady
+  if (glbReady && !firstFrameRenderedAfterReady) {
     firstFrameRenderedAfterReady = true;
     startIfReady();
   }
@@ -254,14 +246,8 @@ animate();
 // ======================================================
 window.addEventListener("carouselColorChange", (e) => {
   const baseColor = new THREE.Color(e.detail.color);
-
-  if (materialesInteractivos.contenido) {
-    colorTargets.contenido.copy(baseColor);
-  }
-
-  if (materialesInteractivos.mcontenido) {
-    colorTargets.mcontenido.copy(baseColor).multiplyScalar(0.85);
-  }
+  if (materialesInteractivos.contenido) colorTargets.contenido.copy(baseColor);
+  if (materialesInteractivos.mcontenido) colorTargets.mcontenido.copy(baseColor).multiplyScalar(0.85);
 });
 
 // ======================================================
@@ -270,12 +256,10 @@ window.addEventListener("carouselColorChange", (e) => {
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-
   if (cameraGLB) {
     cameraGLB.aspect = window.innerWidth / window.innerHeight;
     cameraGLB.updateProjectionMatrix();
   }
-
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
 });

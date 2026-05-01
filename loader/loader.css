@@ -1,0 +1,213 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Montserrat:wght@300;400;500&display=swap');
+
+/* ======================================================
+   SAMY — Loading Screen
+   ====================================================== */
+
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: 'Montserrat', sans-serif;
+  transition: opacity 0.6s ease;
+}
+
+/* Glow de fondo */
+.sl-bg-glow {
+  position: absolute;
+  width: 500px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(220, 120, 100, 0.12) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* ======================================================
+   MARCA
+   ====================================================== */
+.sl-brand {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 52px;
+  text-align: center;
+}
+
+.sl-brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 38px;
+  letter-spacing: 0.22em;
+  color: rgba(3, 3, 3, 0.88);
+  line-height: 1;
+}
+
+.sl-brand-sub {
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: rgba(0, 0, 0, 0.7);
+  text-transform: uppercase;
+  margin-top: 6px;
+}
+
+/* ======================================================
+   FRASCOS
+   ====================================================== */
+.sl-tubes {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  margin-bottom: 48px;
+}
+
+.sl-tube-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Tapa */
+.sl-cap {
+  width: 22px;
+  height: 30px;
+  background: linear-gradient(160deg, #2a2a2a 0%, #111 60%, #1e1e1e 100%);
+  border-radius: 4px 4px 2px 2px;
+  position: relative;
+  box-shadow:
+    inset -2px 0 4px rgba(0, 0, 0, 0.5),
+    inset 1px 0 2px rgba(255, 255, 255, 0.05);
+}
+
+.sl-cap::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 2px;
+  right: 2px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 0 0 2px 2px;
+}
+
+/* Cuerpo del frasco */
+.sl-body {
+  width: 22px;
+  height: 72px;
+  border-radius: 2px 2px 5px 5px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.5px solid rgba(255, 200, 180, 0.18);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset -2px 0 6px rgba(0, 0, 0, 0.3),
+    inset 1px 0 2px rgba(255, 255, 255, 0.04);
+}
+
+/* Relleno de color */
+.sl-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0%;
+  transition: height 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+  border-radius: 0 0 4px 4px;
+}
+
+.sl-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+  animation: sl-ripple 1.8s ease-in-out infinite;
+}
+
+@keyframes sl-ripple {
+  0%, 100% { opacity: 0.2; transform: scaleX(0.8); }
+  50%       { opacity: 0.5; transform: scaleX(1); }
+}
+
+/* Brillo lateral */
+.sl-shine {
+  position: absolute;
+  top: 0;
+  left: 3px;
+  width: 4px;
+  bottom: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 100%);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* Base del frasco */
+.sl-nub {
+  width: 14px;
+  height: 5px;
+  background: #111;
+  border-radius: 0 0 3px 3px;
+}
+
+/* ======================================================
+   FOOTER — Porcentaje y estado
+   ====================================================== */
+.sl-footer {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+
+.sl-percent {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px;
+  font-weight: 300;
+  font-style: italic;
+  color: rgba(0, 0, 0, 0.82);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.sl-status {
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: rgba(0, 0, 0, 0.65);
+  text-transform: uppercase;
+  margin-top: 8px;
+}
+
+/* Línea de progreso */
+.sl-progress-line {
+  width: 180px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 18px auto 0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.sl-progress-line-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c47060, #e8a090, #c47060);
+  background-size: 200% 100%;
+  width: 0%;
+  transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  animation: sl-line-shimmer 2s linear infinite;
+}
+
+@keyframes sl-line-shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}

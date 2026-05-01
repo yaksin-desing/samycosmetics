@@ -5,6 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./loader/loader.css">
   <title>Three.js Demolizione</title>
 
   <!-- ES MODULE SHIMS -->
@@ -25,10 +26,34 @@
 
 <body>
 
-  <!-- LOADER -->
+  <div id="loading-screen">
+
+    <!-- Glow de fondo -->
+    <div class="sl-bg-glow"></div>
+
+    <!-- Marca -->
+    <div class="sl-brand">
+      <div class="sl-brand-name"><img style="filter: invert(1);" src="logo.svg" alt="logo"></div>
+    </div>
+
+    <!-- Frascos — generados por JS en #sl-tubes -->
+    <div class="sl-tubes" id="sl-tubes"></div>
+
+    <!-- Footer -->
+    <div class="sl-footer">
+      <div class="sl-percent" id="sl-pct">0%</div>
+      <div class="sl-status" id="sl-status">Preparando escena</div>
+      <div class="sl-progress-line">
+        <div class="sl-progress-line-fill" id="sl-line"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LOADER
   <div id="loading-screen">
     <div class="loader"></div>
-  </div>
+  </div> -->
 
   <div id="canvas-container"></div>
 
@@ -84,7 +109,7 @@
   <!-- POPUP -->
   <div class="popup-overlay" id="popup">
     <div class="popup">
-      <button class="popup-close"><img  src="close.svg" alt=""></button>
+      <button class="popup-close"><img src="close.svg" alt=""></button>
 
       <img class="labios" src="labios_uno.png" alt="">
 
@@ -118,7 +143,7 @@
         <button id="capture-photo" class="capture-btn"><img src="boton_capt.svg" alt=""></button>
       </div>
       <div class="camera-container">
-       
+
         <div class="camera-flash"></div>
         <div class="marco">
           <div class="columnas_marco">
@@ -161,6 +186,7 @@
 
 
 
+  <script src="./loader/loader.js"></script>
   <script type="module" src="./main.js"></script>
   <script type="module" src="./carrucel.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>

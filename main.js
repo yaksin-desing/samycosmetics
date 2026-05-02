@@ -195,15 +195,69 @@ loader.load(
 );
 
 // ======================================================
-// PARALLAX
+// PARALLAX — mouse (desktop) + giroscopio (móvil)
 // ======================================================
 let mouseX = 0;
 let targetMouseX = 0;
+const lerpFactor = 0.05;
+const cameraTarget = new THREE.Vector3(0, 0.5, 0);
+
+// ── Desktop: mouse ──
 window.addEventListener("mousemove", (e) => {
   targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
 });
-const lerpFactor = 0.05;
-const cameraTarget = new THREE.Vector3(0, 0.5, 0);
+
+// ── Móvil: giroscopio ──
+let gyroEnabled = false;
+let gyroBaseGamma = null;   // gamma = inclinación izquierda/derecha
+
+function handleOrientation(e) {
+  // gamma va de -90 a 90 (izq a der)
+  // Lo normalizamos al rango -1 a 1 con un campo de ±30°
+  const gamma = e.gamma ?? 0;
+
+  // Calibración: el primer valor recibido se toma como "centro"
+  if (gyroBaseGamma === null) gyroBaseGamma = gamma;
+
+  const delta = gamma - gyroBaseGamma;          // diferencia respecto al centro
+  const clamped = Math.max(-30, Math.min(30, delta)); // limita a ±30°
+  targetMouseX = clamped / 30;                  // normaliza a -1…1
+}
+
+// En iOS 13+ y Android Chrome se necesita permiso explícito
+function requestGyro() {
+  if (typeof DeviceOrientationEvent !== "undefined" &&
+      typeof DeviceOrientationEvent.requestPermission === "function") {
+    // iOS 13+
+    DeviceOrientationEvent.requestPermission()
+      .then((state) => {
+        if (state === "granted") {
+          window.addEventListener("deviceorientation", handleOrientation);
+          gyroEnabled = true;
+        }
+      })
+      .catch(console.error);
+  } else if ("DeviceOrientationEvent" in window) {
+    // Android Chrome — no necesita permiso explícito
+    window.addEventListener("deviceorientation", handleOrientation);
+    gyroEnabled = true;
+  }
+}
+
+// Detecta móvil y activa el giroscopio
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+if (isMobile) {
+  // Android activa directo; iOS espera un gesto del usuario
+  if (/Android/i.test(navigator.userAgent)) {
+    requestGyro();
+  } else {
+    // iOS: necesita un tap para pedir permiso — escucha el primer toque
+    window.addEventListener("touchstart", function onFirstTouch() {
+      requestGyro();
+      window.removeEventListener("touchstart", onFirstTouch);
+    }, { once: true });
+  }
+}
 
 // ======================================================
 // 🔁 LOOP (CON PAUSA REAL)

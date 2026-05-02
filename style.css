@@ -134,15 +134,13 @@ canvas {
   position: absolute;
   left: 50%;
   bottom: 0;
-  /* empieza detrás del item */
   transform: translateX(-50%) translateY(9px) scale(0.8);
-  z-index: -1;
+  z-index: -99;
   width: 100%;
-  padding: 7px 6px 7px 6px;
+  padding: 15px 6px;
   border-radius: 7px;
   border: none;
   background: #ffffff;
-  color: #000000;
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
   font-size: 15px;
@@ -150,9 +148,57 @@ canvas {
   opacity: 0;
   pointer-events: none;
   text-align: center;
+  letter-spacing: 0em;
+  overflow: hidden; /* ← necesario para el shimmer de fondo */
   transition:
     transform 0.45s ease,
     opacity 0.35s ease;
+}
+
+/* SHIMMER DE FONDO ( muy sutil sobre blanco) */
+.item-btn::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -75%;
+  width: 50%; height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    rgb(255, 237, 243) 50%,
+    transparent 80%
+  );
+  transform: skewX(-20deg);
+  animation: bshine 7.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes bshine {
+  0%   { left: -75%; }
+  55%  { left: 130%; }
+  100% { left: 130%; }
+}
+
+/* LETRAS CON OLA DE LUZ */
+.item-btn .l {
+  display: inline-block;
+  color: #111;
+  animation: lshine 10.2s ease-in-out infinite;
+}
+
+.item-btn .l:nth-child(1) { animation-delay: 0.00s; }
+.item-btn .l:nth-child(2) { animation-delay: 0.09s; }
+.item-btn .l:nth-child(3) { animation-delay: 0.18s; }
+.item-btn .l:nth-child(4) { animation-delay: 0.27s; }
+.item-btn .l:nth-child(5) { animation-delay: 0.36s; }
+.item-btn .l:nth-child(6) { animation-delay: 0.45s; }
+.item-btn .l:nth-child(7) { animation-delay: 0.54s; }
+.item-btn .l:nth-child(8) { animation-delay: 0.63s; }
+
+@keyframes lshine {
+  0%   { color: #111; text-shadow: none; }
+  10%  { color: #fff; text-shadow: 0 0 6px rgba(0,0,0,0.15), 0 0 14px rgba(255, 100, 159, 0.6); }
+  22%  { color: #111; text-shadow: none; }
+  100% { color: #111; text-shadow: none; }
 }
 
 /* SOLO EL ITEM CENTRAL LO SUBE */
@@ -163,20 +209,18 @@ canvas {
   transition-delay: 0.20s;
   opacity: 1;
   pointer-events: auto;
-  box-shadow:
-    0 0px 7px rgba(0, 0, 0, 0.459);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
 }
 
 
 .item.is-center {
-
   box-shadow:
     0 0px 17px rgba(0, 0, 0, 0.459);
 }
 
 .item .titulo_item {
   font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
+  font-weight: 300;
   width: 100%;
   text-align: center;
   font-size: 15px;
@@ -416,6 +460,7 @@ button {
   font-size: 1rem;
 }
 
+
 .popup-close {
   display: flex;
   align-items: center;
@@ -502,6 +547,7 @@ button {
   height: 100dvh;
   object-fit: cover;
   overflow: hidden;
+   transform: scaleX(-1); /* ← espejo horizontal */
 
 
 }

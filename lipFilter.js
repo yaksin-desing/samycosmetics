@@ -170,7 +170,7 @@ function drawFaceGuide() {
   ctx.font = '16px system-ui';
   ctx.fillStyle = 'rgba(255,255,255,0.8)';
   ctx.textAlign = 'center';
-  ctx.fillText('Detectando rostro…', w / 2, h * 0.5);
+  ctx.fillText('…', w / 2, h * 1);
 
   ctx.restore();
 }
@@ -234,7 +234,7 @@ function onResults(results) {
   ctx.save();
   ctx.globalCompositeOperation = 'multiply';
   ctx.fillStyle = currentLipColor;
-  ctx.globalAlpha = 0.45;
+  ctx.globalAlpha = 0.7
 
   drawLipsMask(smoothLandmarks);
   ctx.restore();
@@ -269,7 +269,7 @@ captureBtn.addEventListener('click', async () => {
   flash.classList.add('active');
   marco.classList.add('capture-visible');
 
-  
+
   // 🔹 Actualizar fecha en el marco ANTES de capturar
   const fechaEl = document.getElementById('fecha-captura');
   if (fechaEl) {
@@ -310,9 +310,12 @@ captureBtn.addEventListener('click', async () => {
     sh = sw / viewRatio;
     sy = (videoH - sh) / 2;
   }
-
+  octx.save();
+  octx.translate(vw, 0);
+  octx.scale(-1, 1);
   octx.drawImage(video, sx, sy, sw, sh, 0, 0, vw, vh);
   octx.drawImage(canvas, sx, sy, sw, sh, 0, 0, vw, vh);
+  octx.restore();
 
 
   html2canvas(marco, {

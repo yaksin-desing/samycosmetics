@@ -1,9 +1,19 @@
 import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import {
+  GLTFLoader
+} from "three/addons/loaders/GLTFLoader.js";
+import {
+  OrbitControls
+} from "three/addons/controls/OrbitControls.js";
+import {
+  EffectComposer
+} from "three/addons/postprocessing/EffectComposer.js";
+import {
+  RenderPass
+} from "three/addons/postprocessing/RenderPass.js";
+import {
+  UnrealBloomPass
+} from "three/addons/postprocessing/UnrealBloomPass.js";
 
 // ======================================================
 // 🔴 CONTROL GLOBAL DE RENDER (PAUSA REAL)
@@ -14,7 +24,10 @@ let rafId = null;
 window.pauseThree = () => {
   if (!threeRunning) return;
   threeRunning = false;
-  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
   clock.stop();
   controls.enabled = false;
   console.log("⏸️ Three.js PAUSADO — render detenido");
@@ -44,7 +57,10 @@ let cameraGLB = null;
 // ======================================================
 // MATERIALES INTERACTIVOS
 // ======================================================
-const materialesInteractivos = { contenido: null, mcontenido: null };
+const materialesInteractivos = {
+  contenido: null,
+  mcontenido: null
+};
 const colorTargets = {
   contenido: new THREE.Color(),
   mcontenido: new THREE.Color()
@@ -133,10 +149,9 @@ controls.enableDamping = true;
 // ======================================================
 const loader = new GLTFLoader();
 
-// ── Reemplazá el bloque loader.load() en main.js por esto ──
 
 loader.load(
-  "samy.glb",
+  "samys.glb",
 
   // ✅ onLoad
   (gltf) => {
@@ -160,6 +175,10 @@ loader.load(
           colorTargets[matName].copy(obj.material.color);
         }
       }
+
+      if (obj.name === "tubo") {
+        tuboMesh = obj;
+      }
     });
 
     mixer = new THREE.AnimationMixer(model);
@@ -180,7 +199,9 @@ loader.load(
   (xhr) => {
     if (xhr.total > 0) {
       window.dispatchEvent(new CustomEvent("glbProgress", {
-        detail: { pct: (xhr.loaded / xhr.total) * 100 }
+        detail: {
+          pct: (xhr.loaded / xhr.total) * 100
+        }
       }));
     }
   },
@@ -189,7 +210,11 @@ loader.load(
   (error) => {
     console.error("Error al cargar el modelo:", error);
     glbReady = true;
-    window.dispatchEvent(new CustomEvent("glbProgress", { detail: { pct: 100 } }));
+    window.dispatchEvent(new CustomEvent("glbProgress", {
+      detail: {
+        pct: 100
+      }
+    }));
     window.dispatchEvent(new CustomEvent("glbReady"));
   }
 );
@@ -202,6 +227,11 @@ let targetMouseX = 0;
 const lerpFactor = 0.05;
 const cameraTarget = new THREE.Vector3(0, 0.5, 0);
 
+// ✅ AGREGA ESTO aquí arriba:
+let tuboMesh = null;
+let tuboTargetRotationY = 0;
+const tuboLerpSpeed = 0.04;
+
 // ── Desktop: mouse ──
 window.addEventListener("mousemove", (e) => {
   targetMouseX = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -209,7 +239,7 @@ window.addEventListener("mousemove", (e) => {
 
 // ── Móvil: giroscopio ──
 let gyroEnabled = false;
-let gyroBaseGamma = null;   // gamma = inclinación izquierda/derecha
+let gyroBaseGamma = null; // gamma = inclinación izquierda/derecha
 
 function handleOrientation(e) {
   // gamma va de -90 a 90 (izq a der)
@@ -219,15 +249,15 @@ function handleOrientation(e) {
   // Calibración: el primer valor recibido se toma como "centro"
   if (gyroBaseGamma === null) gyroBaseGamma = gamma;
 
-  const delta = gamma - gyroBaseGamma;          // diferencia respecto al centro
+  const delta = gamma - gyroBaseGamma; // diferencia respecto al centro
   const clamped = Math.max(-30, Math.min(30, delta)); // limita a ±30°
-  targetMouseX = clamped / 30;                  // normaliza a -1…1
+  targetMouseX = clamped / 30; // normaliza a -1…1
 }
 
 // En iOS 13+ y Android Chrome se necesita permiso explícito
 function requestGyro() {
   if (typeof DeviceOrientationEvent !== "undefined" &&
-      typeof DeviceOrientationEvent.requestPermission === "function") {
+    typeof DeviceOrientationEvent.requestPermission === "function") {
     // iOS 13+
     DeviceOrientationEvent.requestPermission()
       .then((state) => {
@@ -255,7 +285,9 @@ if (isMobile) {
     window.addEventListener("touchstart", function onFirstTouch() {
       requestGyro();
       window.removeEventListener("touchstart", onFirstTouch);
-    }, { once: true });
+    }, {
+      once: true
+    });
   }
 }
 
@@ -283,6 +315,10 @@ function animate() {
   if (materialesInteractivos.mcontenido) {
     materialesInteractivos.mcontenido.color.lerp(colorTargets.mcontenido, colorLerpSpeed);
   }
+  // Rotar tubo suavemente
+  if (tuboMesh) {
+    tuboMesh.rotation.y += (tuboTargetRotationY - tuboMesh.rotation.y) * tuboLerpSpeed;
+  }
 
   composer.render();
 
@@ -302,6 +338,9 @@ window.addEventListener("carouselColorChange", (e) => {
   const baseColor = new THREE.Color(e.detail.color);
   if (materialesInteractivos.contenido) colorTargets.contenido.copy(baseColor);
   if (materialesInteractivos.mcontenido) colorTargets.mcontenido.copy(baseColor).multiplyScalar(0.85);
+
+  // 🔄 Rotar el tubo un giro completo por cada cambio de ítem
+  tuboTargetRotationY += Math.PI * 2;
 });
 
 // ======================================================

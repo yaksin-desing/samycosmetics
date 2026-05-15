@@ -142,6 +142,7 @@ canvas {
   border: none;
   background: #ffffff;
   font-family: 'Montserrat', sans-serif;
+  text-transform: uppercase;
   font-weight: 500;
   font-size: 15px;
   cursor: pointer;
@@ -149,7 +150,8 @@ canvas {
   pointer-events: none;
   text-align: center;
   letter-spacing: 0em;
-  overflow: hidden; /* ← necesario para el shimmer de fondo */
+  overflow: hidden;
+  /* ← necesario para el shimmer de fondo */
   transition:
     transform 0.45s ease,
     opacity 0.35s ease;
@@ -159,23 +161,31 @@ canvas {
 .item-btn::before {
   content: "";
   position: absolute;
-  top: 0; left: -75%;
-  width: 50%; height: 100%;
-  background: linear-gradient(
-    120deg,
-    transparent 20%,
-    rgb(255, 237, 243) 50%,
-    transparent 80%
-  );
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg,
+      transparent 20%,
+      rgb(255, 237, 243) 50%,
+      transparent 80%);
   transform: skewX(-20deg);
   animation: bshine 7.2s ease-in-out infinite;
   pointer-events: none;
 }
 
 @keyframes bshine {
-  0%   { left: -75%; }
-  55%  { left: 130%; }
-  100% { left: 130%; }
+  0% {
+    left: -75%;
+  }
+
+  55% {
+    left: 130%;
+  }
+
+  100% {
+    left: 130%;
+  }
 }
 
 /* LETRAS CON OLA DE LUZ */
@@ -185,20 +195,58 @@ canvas {
   animation: lshine 10.2s ease-in-out infinite;
 }
 
-.item-btn .l:nth-child(1) { animation-delay: 0.00s; }
-.item-btn .l:nth-child(2) { animation-delay: 0.09s; }
-.item-btn .l:nth-child(3) { animation-delay: 0.18s; }
-.item-btn .l:nth-child(4) { animation-delay: 0.27s; }
-.item-btn .l:nth-child(5) { animation-delay: 0.36s; }
-.item-btn .l:nth-child(6) { animation-delay: 0.45s; }
-.item-btn .l:nth-child(7) { animation-delay: 0.54s; }
-.item-btn .l:nth-child(8) { animation-delay: 0.63s; }
+.item-btn .l:nth-child(1) {
+  animation-delay: 0.00s;
+}
+
+.item-btn .l:nth-child(2) {
+  animation-delay: 0.09s;
+}
+
+.item-btn .l:nth-child(3) {
+  animation-delay: 0.18s;
+}
+
+.item-btn .l:nth-child(4) {
+  animation-delay: 0.27s;
+}
+
+.item-btn .l:nth-child(5) {
+  animation-delay: 0.36s;
+}
+
+.item-btn .l:nth-child(6) {
+  animation-delay: 0.45s;
+}
+
+.item-btn .l:nth-child(7) {
+  animation-delay: 0.54s;
+}
+
+.item-btn .l:nth-child(8) {
+  animation-delay: 0.63s;
+}
 
 @keyframes lshine {
-  0%   { color: #111; text-shadow: none; }
-  10%  { color: #fff; text-shadow: 0 0 6px rgba(0,0,0,0.15), 0 0 14px rgba(255, 100, 159, 0.6); }
-  22%  { color: #111; text-shadow: none; }
-  100% { color: #111; text-shadow: none; }
+  0% {
+    color: #111;
+    text-shadow: none;
+  }
+
+  10% {
+    color: #fff;
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.15), 0 0 14px rgba(255, 100, 159, 0.6);
+  }
+
+  22% {
+    color: #111;
+    text-shadow: none;
+  }
+
+  100% {
+    color: #111;
+    text-shadow: none;
+  }
 }
 
 /* SOLO EL ITEM CENTRAL LO SUBE */
@@ -252,7 +300,7 @@ canvas {
 
 }
 
-#prev{
+#prev {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -288,191 +336,6 @@ canvas {
   font-size: 12px;
   width: 100%;
   text-align: center;
-}
-
-
-/* ===========================
-   POPUP
-=========================== */
-.popup-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
-}
-
-.popup-overlay.active {
-  opacity: 1;
-  pointer-events: auto;
-  width: 100%;
-}
-
-.popup {
-  background: #ffffff;
-  border-radius: 7px;
-  text-align: center;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
-  position: absolute;
-  animation: popupIn 0.45s ease;
-  width: 300px;
-  
-}
-
-@keyframes popupIn {
-  from {
-    transform: translateY(20px) scale(0.95);
-    opacity: 0;
-  }
-
-  to {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
-.cont_data {
-  padding: 10px 15px 15px 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-}
-
-.cont-titulo {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  justify-content: space-between;
-  margin-top: 2px;
-  margin-bottom: 2px;
-}
-
-.popup-title {
-  margin: 0px;
-  font-size: 1.5rem;
-  text-align: left;
-}
-
-.popup-price {
-  margin: 0 0 0px 0px;
-  font-size: 1rem;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
-  text-align: center;
-
-}
-
-#popup-description {
-  margin: 0px;
-  font-size: 0.7rem;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
-  text-align: left;
-}
-
-.popup .parrafo {
-  font-size: 14px;
-  margin-bottom: 0px;
-}
-
-.cont_subtitle {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-
-.conten_colores {
-  width: 100%;
-
-}
-
-#popup-colors {
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-.popup-subtitle {
-  margin: 5px 0px;
-  font-size: 0.5rem;
-  text-align: left;
-}
-
-.popup-color {
-  width: 15px;
-  height: 15px;
-  border-radius: 100px;
-  margin-bottom: 16px;
-  background: red;
-}
-
-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  font-family: "mona";
-}
-
-.labios {
-  width: 100%;
-  border-radius: 7px 7px 0px 0px;
-  margin-bottom: 0px;
-}
-
-.try-lips-btn {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #f0f0f0;
-  color: #000;
-  cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
-  font-size: 1rem;
-  margin-bottom: 10px;
-}
-
-.popup-action {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #000;
-  color: #fff;
-  cursor: pointer;
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
-  font-size: 1rem;
-}
-
-
-.popup-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 7px;
-  position: absolute;
-  border-radius: 100px;
-  top: 10px;
-  right: 10px;
-  background: #ffffff;
-
 }
 
 
@@ -547,7 +410,8 @@ button {
   height: 100dvh;
   object-fit: cover;
   overflow: hidden;
-   transform: scaleX(-1); /* ← espejo horizontal */
+  transform: scaleX(-1);
+  /* ← espejo horizontal */
 
 
 }
@@ -565,7 +429,7 @@ button {
   bottom: 10vh;
   transform: translateX(-50%);
   z-index: 100;
-  gap: 10px;
+  gap: 20px;
 }
 
 
@@ -573,15 +437,21 @@ button {
    CAPTURE BUTTON
 =========================== */
 .capture-btn {
-  width: 72px;
-  height: 72px;
+  width: 57px;
+  height: 57px;
   border-radius: 50%;
   cursor: pointer;
   z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  padding: 0;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
 }
+
 
 /* ===========================
    BACK BUTTON (CAMERA)
@@ -650,6 +520,7 @@ button {
   align-items: center;
   justify-content: center;
 }
+
 .detalle_tres img {
   width: 10vw;
 }
@@ -671,9 +542,8 @@ button {
 }
 
 
-.marco.capture-visible .col_marco_top
-{
-background: #ffffff;
+.marco.capture-visible .col_marco_top {
+  background: #ffffff;
 }
 
 /* Se muestran SOLO al capturar */
@@ -698,12 +568,328 @@ background: #ffffff;
 }
 
 @keyframes cameraFlash {
-  0%   { opacity: 0; }
-  15%  { opacity: 0.9; }
-  55%  { opacity: 0; }
-  85%  { opacity: 0.4; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 0.9;
+  }
+
+  55% {
+    opacity: 0;
+  }
+
+  85% {
+    opacity: 0.4;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
+
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+
+/* ===========================
+   POPUP OVERLAY
+=========================== */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 14, 8, 0.52);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.popup-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+  width: 100%;
+}
+
+/* ===========================
+   POPUP CARD
+=========================== */
+.popup {
+  background: #FAF7F4;
+  border-radius: 12px;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  position: absolute;
+  animation: popupIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  width: 300px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(30, 14, 8, 0.22), 0 4px 16px rgba(30, 14, 8, 0.10);
+}
+
+@keyframes popupIn {
+  from {
+    transform: translateY(24px) scale(0.96);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ===========================
+   IMAGEN LABIOS
+=========================== */
+.labios {
+  width: 100%;
+  border-radius: 0;
+  margin-bottom: 0;
+  display: block;
+  object-fit: cover;
+  height: 180px;
+  /* Sutil vignette al fondo de la imagen */
+  mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+}
+
+/* ===========================
+   CONTENIDO
+=========================== */
+.cont_data {
+  padding: 14px 18px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+}
+
+/* ===========================
+   FILA TÍTULO + PRECIO
+=========================== */
+.cont-titulo {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  width: 100%;
+  justify-content: space-between;
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+.popup-title {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  color: #2C1A12;
+  text-align: left;
+  line-height: 1;
+}
+
+.popup-price {
+  margin: 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #2C1A12;
+  text-align: right;
+  white-space: nowrap;
+}
+
+
+/* ===========================
+   DESCRIPCIÓN
+=========================== */
+#popup-description {
+  margin: 0 0 12px 0;
+  font-size: 0.68rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 300;
+  line-height: 1.75;
+  color: #6B4A3C;
+  text-align: left;
+}
+
+/* ===========================
+   TONOS
+=========================== */
+.cont_subtitle {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+.conten_colores {
+  width: 100%;
+}
+
+.popup-subtitle {
+  margin: 0 0 8px 0;
+  font-size: 0.58rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #A88070;
+  text-align: left;
+}
+
+#popup-colors {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.popup-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: red;
+  cursor: pointer;
+  border: 2px solid transparent;
+  outline: none;
+  transition: transform 0.15s ease;
+  position: relative;
+}
+
+.popup-color:hover {
+  transform: scale(1.18);
+}
+
+/* anillo de selección activo (añade .active por JS si lo usas) */
+.popup-color.active::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid #8B5E4A;
+}
+
+/* ===========================
+   BOTONES
+=========================== */
+
+/* "Probar en mi rostro" */
+.try-lips-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 0.5px solid #C4A090;
+  background: transparent;
+  color: #5C3A2C;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.try-lips-btn:hover {
+  background: rgba(196, 160, 144, 0.12);
+  border-color: #8B5E4A;
+}
+
+/* "Comprar" */
+.popup-action {
+  width: 100%;
+  padding: 13px;
+  border-radius: 10px;
+  border: none;
+  background: #1d1a1a;
+  color: #F2E4DA;
+  cursor: pointer;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.popup-action:hover {
+  opacity: 0.88;
+}
+
+.popup-action:active {
+  transform: scale(0.985);
+}
+
+/* ===========================
+   BOTÓN CERRAR
+=========================== */
+.popup-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px;
+  position: absolute;
+  border-radius: 50%;
+  top: 10px;
+  right: 10px;
+  background: rgba(250, 247, 244, 0.82);
+  border: 0.5px solid #D4B8A8;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 10;
+  transition: background 0.2s ease;
+}
+
+.popup-close:hover {
+  background: rgba(250, 247, 244, 1);
+}
+
+.popup-close img {
+  width: 14px;
+  height: 14px;
+  display: block;
+  /* Si el icono es negro y quieres que combine con el tono cálido */
+  filter: brightness(0) saturate(100%) invert(28%) sepia(20%) saturate(600%) hue-rotate(340deg) brightness(80%);
+}
+
+/* ===========================
+   PARRAFO (si aparece dentro del popup)
+=========================== */
+.popup .parrafo {
+  font-size: 0.7rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 400;
+  color: #A88070;
+  letter-spacing: 0.06em;
+  margin-bottom: 0;
+}
+
+button {
+  border: none;
+}
+
+
+
 
 @media (max-width: 868px) {
   .controls {
@@ -728,8 +914,8 @@ background: #ffffff;
 
 
   #titulo_item_camera {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
     text-align: center;
     font-size: 20px;
     color: #000000;
@@ -758,8 +944,8 @@ background: #ffffff;
   }
 
   .detalle_uno p {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
     font-size: 3.5vw;
     color: #000000;
   }
@@ -771,8 +957,8 @@ background: #ffffff;
   }
 
   .detalle_dos p {
-  font-family: 'Montserrat', sans-serif;
-  font-weight: 500;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
     font-size: 3.5vw;
     color: #000000;
   }
@@ -788,5 +974,15 @@ background: #ffffff;
     width: 100%;
   }
 
+  .nav_camara {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    left: 50%;
+    bottom: 5vh;
+    transform: translateX(-50%);
+    z-index: 100;
+    gap: 20px;
+  }
 
 }

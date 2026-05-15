@@ -135,7 +135,7 @@ composer.addPass(new RenderPass(scene, camera));
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   0.2, 0.1, 0.2
-);
+); 
 composer.addPass(bloomPass);
 
 // ======================================================

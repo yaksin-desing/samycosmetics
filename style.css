@@ -143,6 +143,8 @@ canvas {
   background: #ffffff;
   font-family: 'Montserrat', sans-serif;
   text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
   font-weight: 500;
   font-size: 15px;
   cursor: pointer;
@@ -852,8 +854,8 @@ canvas {
   border-radius: 50%;
   top: 10px;
   right: 10px;
-  background: rgba(250, 247, 244, 0.82);
-  border: 0.5px solid #D4B8A8;
+  background: rgb(255, 255, 255);
+  border: 0.5px solid #ffffff;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   z-index: 10;
@@ -983,6 +985,41 @@ button {
     transform: translateX(-50%);
     z-index: 100;
     gap: 20px;
+  }
+
+  .popup {
+    background: #FAF7F4;
+    border-radius: 12px;
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    position: absolute;
+    animation: popupIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    width: 350px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(30, 14, 8, 0.22), 0 4px 16px rgba(30, 14, 8, 0.10);
+  }
+
+  .popup-title {
+    margin: 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem;
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: 0.06em;
+    color: #2C1A12;
+    text-align: left;
+    line-height: 1;
+  }
+
+  #popup-description {
+    margin: 0 0 12px 0;
+    font-size: 0.8rem;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 300;
+    line-height: 1.75;
+    color: #6B4A3C;
+    text-align: left;
   }
 
 }

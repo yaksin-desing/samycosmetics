@@ -230,7 +230,7 @@ const cameraTarget = new THREE.Vector3(0, 0.5, 0);
 // ✅ AGREGA ESTO aquí arriba:
 let tuboMesh = null;
 let tuboTargetRotationY = 0;
-const tuboLerpSpeed = 0.04;
+const tuboLerpSpeed = 0.09;
 
 // ── Desktop: mouse ──
 window.addEventListener("mousemove", (e) => {

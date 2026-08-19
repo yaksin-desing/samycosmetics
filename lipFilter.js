@@ -96,8 +96,8 @@ function injectScannerStyles() {
       position: absolute;
       width: 34px;
       height: 34px;
-      border: 2px solid rgba(120,190,255,0.9);
-      filter: drop-shadow(0 0 6px rgba(90,170,255,0.65));
+      border: 2px solid rgb(255, 139, 139);
+      filter: drop-shadow(0 0 6px rgba(255, 90, 170, 0.65));
       opacity: 0.9;
       animation: cornerPulse 2.2s ease-in-out infinite;
     }
@@ -107,7 +107,7 @@ function injectScannerStyles() {
     .corner-br { bottom: 0; right: 0; border-left: none; border-top: none; border-radius: 0 0 6px 0; }
 
     @keyframes cornerPulse {
-      0%, 100% { opacity: 0.55; }
+      0%, 100% { opacity: 0.1; }
       50% { opacity: 1; }
     }
 
@@ -116,8 +116,8 @@ function injectScannerStyles() {
       left: 6%;
       right: 6%;
       height: 2px;
-      background: linear-gradient(90deg, rgba(120,190,255,0) 0%, rgba(150,205,255,0.95) 50%, rgba(120,190,255,0) 100%);
-      box-shadow: 0 0 10px 2px rgba(120,190,255,0.7);
+      background: linear-gradient(90deg, rgba(255, 20, 20, 0.64) 0%, rgb(255, 166, 166) 50%, rgba(255, 20, 20, 0.64) 100%);
+      box-shadow: 0 0 15px 7px rgba(255, 159, 159, 0.28);
       animation: scanSweep 2s ease-in-out infinite;
     }
 
@@ -143,7 +143,7 @@ function injectScannerStyles() {
       display: block;
       width: 100%;
       height: 2px;
-      background: rgba(120,190,255,0.8);
+      background: rgb(255, 139, 139);
     }
 
     .scanner-bottom {
@@ -171,6 +171,7 @@ function injectScannerStyles() {
       align-items: center;
       gap: 14px;
       width: 100%;
+      flex-direction: column;
     }
 
     .scanner-percent {
